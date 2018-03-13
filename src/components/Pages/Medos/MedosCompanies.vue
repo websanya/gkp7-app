@@ -17,22 +17,35 @@
             <h2 class="text-xs-center">Редактор предприятий</h2>
             <v-container grid-list-md>
 
-              <!-- Поле для поиска -->
-              <v-text-field
-                  append-icon="search"
-                  label="Поиск"
-                  hide-details
-                  v-model="companiesListSearch"
-              >
-              </v-text-field>
-              <!-- / Поле для поиска -->
+              <v-layout row wrap>
+                <!-- Поле для поиска -->
+                <v-flex sm12 md8>
+                  <v-text-field
+                      append-icon="search"
+                      label="Поиск"
+                      hide-details
+                      v-model="companiesListSearch"
+                  >
+                  </v-text-field>
+                </v-flex>
+                <!-- / Поле для поиска -->
+
+                <!-- Добавить предприятие -->
+                <v-flex sm12 md4>
+                  <v-btn @click.native="openAddDialog('company')" :color="subSystem.secondaryColor" dark large block>
+                    Добавить
+                    предприятие
+                  </v-btn>
+                </v-flex>
+                <!-- / Добавить предприятие -->
+              </v-layout>
 
               <!-- Сама таблица -->
               <v-data-table
                   v-if="companies.length > 0"
                   :headers="[
                     {text: 'Код', value: 'companyId'},
-                    {text: 'Название', value: 'companyName'},
+                    {text: 'Название предприятия', value: 'companyName'},
                     {text: 'Тариф', value: 'companyRate'},
                     {text: 'Действия'}
                   ]"
@@ -42,7 +55,7 @@
                   no-results-text="По запросу ничего не найдено"
                   :rows-per-page-items="[7,15,{'text':'Все','value':-1}]"
                   rows-per-page-text="Строк на странице:"
-                  class="elevation-10 mt-4"
+                  class="elevation-10"
               >
                 <template slot="headers" slot-scope="props">
                   <tr>
@@ -56,15 +69,15 @@
                 </template>
                 <template slot="items" slot-scope="props">
                   <tr>
-                    <td>{{ props.item.companyId }}</td>
+                    <td width="90px">{{ props.item.companyId }}</td>
                     <td>{{ props.item.companyName }}</td>
-                    <td>{{ props.item.companyRate }}</td>
+                    <td width="90px">{{ props.item.companyRate }}</td>
                     <td width="211px">
                       <v-btn @click.native="openDivisionsListDialog(props.item)" :color="subSystem.primaryColor"
                              icon>
                         <v-icon color="white">list</v-icon>
                       </v-btn>
-                      <v-btn @click.native="openAddDivisionDialog()" :color="subSystem.primaryColor" icon>
+                      <v-btn @click.native="openEditDialog(props.item)" :color="subSystem.primaryColor" icon>
                         <v-icon color="white">edit</v-icon>
                       </v-btn>
                       <v-btn @click.native="openRemoveDialog(props.item)" color="red darken-2" icon>
@@ -109,13 +122,27 @@
           </span>
           <v-spacer>
           </v-spacer>
-          <v-text-field
-              append-icon="search"
-              label="Поиск"
-              hide-details
-              v-model="divisionsListSearch"
-          >
-          </v-text-field>
+          <v-layout row wrap>
+            <!-- Поле для поиска -->
+            <v-flex sm12 md8 style="padding: 4px">
+              <v-text-field
+                  append-icon="search"
+                  label="Поиск"
+                  hide-details
+                  v-model="divisionsListSearch"
+              >
+              </v-text-field>
+            </v-flex>
+            <!-- / Поле для поиска -->
+
+            <!-- Добавить цех -->
+            <v-flex sm12 md4 style="padding: 4px">
+              <v-btn @click.native="openAddDialog('division')" :color="subSystem.secondaryColor" dark large block>
+                Добавить цех
+              </v-btn>
+            </v-flex>
+            <!-- / Добавить цех -->
+          </v-layout>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
@@ -177,7 +204,7 @@
     </v-dialog>
     <!-- / Диалог списка цехов в предприятии -->
 
-    <!-- Диалог списка участков в предприятии -->
+    <!-- Диалог списка участков в цеху -->
     <v-dialog v-model="departmentsListDialog.show" persistent max-width="800px">
       <v-card>
         <v-card-title>
@@ -186,13 +213,27 @@
           </span>
           <v-spacer>
           </v-spacer>
-          <v-text-field
-              append-icon="search"
-              label="Поиск"
-              hide-details
-              v-model="departmentsListSearch"
-          >
-          </v-text-field>
+          <v-layout row wrap>
+            <!-- Поле для поиска -->
+            <v-flex sm12 md8 style="padding: 4px">
+              <v-text-field
+                  append-icon="search"
+                  label="Поиск"
+                  hide-details
+                  v-model="departmentsListSearch"
+              >
+              </v-text-field>
+            </v-flex>
+            <!-- / Поле для поиска -->
+
+            <!-- Добавить участок -->
+            <v-flex sm12 md4 style="padding: 4px">
+              <v-btn @click.native="openAddDialog('department')" :color="subSystem.secondaryColor" dark large block>
+                Добавить участок
+              </v-btn>
+            </v-flex>
+            <!-- / Добавить участок -->
+          </v-layout>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
@@ -247,10 +288,257 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <!-- / Диалог списка цехов в предприятии -->
+    <!-- / Диалог списка участков в цеху -->
+
+    <!-- Диалог добавления предприятия/цеха/участка -->
+    <v-dialog v-model="addDialog.show" persistent max-width="800px">
+      <v-card>
+
+        <!-- Заголовок для предприятия -->
+        <v-card-title v-if="currentAddItem.companyName">
+          <span class="headline">Добавить предприятие</span>
+        </v-card-title>
+        <!-- / Заголовок для предприятия -->
+
+        <!-- Заголовок для цеха -->
+        <v-card-title v-if="currentAddItem.divisionName">
+          <span class="headline">
+            Добавить цех в <span
+              class="green--text text--darken-2">«{{ currentCompanyItem.companyName }}»</span>
+          </span>
+        </v-card-title>
+        <!-- / Заголовок для цеха -->
+
+        <!-- Заголовок для участка -->
+        <v-card-title v-if="currentAddItem.departmentName">
+          <span class="headline">
+            Добавить участок в <span
+              class="green--text text--darken-2">«{{ currentDivisionItem.divisionName }}»</span>
+          </span>
+        </v-card-title>
+        <!-- / Заголовок для участка -->
+
+        <v-card-text>
+          <v-container grid-list-md>
+
+            <!-- Тело для предприятия -->
+            <v-layout v-if="currentAddItem.companyName" row wrap>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Код предприятия"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.companyId"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Название предприятия"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.companyName"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Тариф предприятия"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.companyRate"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <!-- / Тело для предприятия -->
+
+            <!-- Тело для цеха -->
+            <v-layout v-if="currentAddItem.divisionName" row wrap>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Код цеха"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.divisionId"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Полное название цеха"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.divisionFullName"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Название цеха"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.divisionName"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <!-- / Тело для цеха -->
+
+            <!-- Тело для участка -->
+            <v-layout v-if="currentAddItem.departmentName" row wrap>
+              <v-flex sm12 md6>
+                <v-text-field
+                    label="Код участка"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.departmentId"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md6>
+                <v-text-field
+                    label="Название участка"
+                    :color="subSystem.primaryColor"
+                    v-model="currentAddItem.departmentName"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <!-- / Тело для участка -->
+
+          </v-container>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn :color="subSystem.secondaryColor" flat @click.native="noAddDialog">Закрыть</v-btn>
+          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="yesAddDialog">Добавить</v-btn>
+        </v-card-actions>
+
+      </v-card>
+    </v-dialog>
+    <!-- / Диалог добавления предприятия/цеха/участка -->
 
     <!-- Диалог редактирования предприятия/цеха/участка -->
-    <!-- / Диалог редактирования предприятия/цеха/участка -->
+    <v-dialog v-model="editDialog.show" persistent max-width="800px">
+      <v-card>
+
+        <!-- Заголовок для предприятия -->
+        <v-card-title v-if="currentEditItem.companyName">
+          <span class="headline">
+            Редактировать предприятие — <span
+              class="green--text text--darken-2">«{{ currentEditItem.companyName }}»</span>
+          </span>
+        </v-card-title>
+        <!-- / Заголовок для предприятия -->
+
+        <!-- Заголовок для цеха -->
+        <v-card-title v-if="currentEditItem.divisionName">
+          <span class="headline">
+            Редактировать цех — <span class="green--text text--darken-2">«{{ currentEditItem.divisionName }}»</span>
+          </span>
+        </v-card-title>
+        <!-- / Заголовок для цеха -->
+
+        <!-- Заголовок для участка -->
+        <v-card-title v-if="currentEditItem.departmentName">
+          <span class="headline">
+            Редактировать участок — <span
+              class="green--text text--darken-2">«{{ currentEditItem.departmentName }}»</span>
+          </span>
+        </v-card-title>
+        <!-- / Заголовок для участка -->
+
+        <v-card-text>
+          <v-container grid-list-md>
+
+            <!-- Тело для предприятия -->
+            <v-layout v-if="currentEditItem.companyName" row wrap>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Код предприятия"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.companyId"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Название предприятия"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.companyName"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Тариф предприятия"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.companyRate"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <!-- / Тело для предприятия -->
+
+            <!-- Тело для цеха -->
+            <v-layout v-if="currentEditItem.divisionName" row wrap>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Код цеха"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.divisionId"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Полное название цеха"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.divisionFullName"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-text-field
+                    label="Название цеха"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.divisionName"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <!-- / Тело для цеха -->
+
+            <!-- Тело для участка -->
+            <v-layout v-if="currentEditItem.departmentName" row wrap>
+              <v-flex sm12 md6>
+                <v-text-field
+                    label="Код участка"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.departmentId"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md6>
+                <v-text-field
+                    label="Название участка"
+                    :color="subSystem.primaryColor"
+                    v-model="currentEditItem.departmentName"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <!-- / Тело для участка -->
+
+          </v-container>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn :color="subSystem.secondaryColor" flat @click.native="noEditDialog">Закрыть</v-btn>
+          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="yesEditDialog">Сохранить</v-btn>
+        </v-card-actions>
+
+      </v-card>
+    </v-dialog>
+    <!-- / Диалог добавления предприятия/цеха/участка -->
 
     <!-- Диалог удаления предприятия/цеха/участка -->
     <v-dialog v-model="removeDialog.show" persistent max-width="800px">
@@ -281,58 +569,6 @@
     </v-dialog>
     <!-- / Диалог удаления предприятия/цеха/участка -->
 
-    <v-dialog v-model="addCompanyDialog.show" persistent max-width="800px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">Добавить нового пациента</span>
-        </v-card-title>
-        <v-card-text>
-          <v-container grid-list-md>
-            <v-layout row wrap>
-              <v-flex sm12 md4>
-                <v-select
-                    label="Прививка"
-                    autocomplete
-                    :color="subSystem.primaryColor"
-                >
-                </v-select>
-              </v-flex>
-              <v-flex sm12 md4>
-                <v-select
-                    label="Препарат"
-                    autocomplete
-                    :color="subSystem.primaryColor"
-                >
-                </v-select>
-              </v-flex>
-              <v-flex sm12 md2>
-                <v-select
-                    label="Серия"
-                    autocomplete
-                    :color="subSystem.primaryColor"
-                >
-                </v-select>
-              </v-flex>
-              <v-flex sm12 md2>
-                <v-text-field
-                    label="Срок"
-                    :color="subSystem.primaryColor"
-                    disabled
-                >
-                </v-text-field>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer>
-          </v-spacer>
-          <v-btn :color="subSystem.secondaryColor" flat @click.native="closeAddPatientDialog">Закрыть</v-btn>
-          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="saveAddPatientDialog">Сохранить
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-app>
 </template>
 
@@ -349,40 +585,34 @@
         currentUser: {},
         //* Все предприятия, которые есть в системе на момент открытия.
         companies: [],
+        //* То, что будем добавлять.
+        currentAddItem: {},
+        //* То, что будем удалять.
+        currentRemoveItem: {},
+        //* То, что будем редактировать.
+        currentEditItem: {},
         //* Та компания, чей список открыт.
         currentCompanyItem: {},
         //* Тот цех, чей список открыт.
         currentDivisionItem: {},
-        //* То, что будем удалять.
-        currentRemoveItem: {},
-        //* Предприятие, которое мы добавляем.
-        newCompany: {},
-        //* Цех, который мы добавляем.
-        newDivision: {},
-        //* Участок, который мы добавляем.
-        newDepartment: {},
-        //* Диалог списка цехов.
-        divisionsListDialog: {
-          show: false
-        },
-        //* Диалог списка участков.
-        departmentsListDialog: {
+        //* Диалог добавления предприятия/цеха/участка.
+        addDialog: {
           show: false
         },
         //* Диалог удаления предприятия/цеха/участка.
         removeDialog: {
           show: false
         },
-        //* Все, что связано с диалогом добавления предприятия.
-        addCompanyDialog: {
+        //* Диалог редактирования предприятия/цеха/участка.
+        editDialog: {
           show: false
         },
-        //* Все, что связано с диалогом добавления цеха.
-        addDivisionDialog: {
+        //* Диалог списка цехов.
+        divisionsListDialog: {
           show: false
         },
-        //* Все, что связано с диалогом добавления участка.
-        addDepartmentDialog: {
+        //* Диалог списка участков.
+        departmentsListDialog: {
           show: false
         },
         //* Все, что связано с snackbar, который всплывает во время ошибок.
@@ -395,9 +625,9 @@
         //* Цвета для данной подсистемы.
         subSystem: {
           primaryColor: 'light-blue darken-2',
-          secondaryColor: 'brown darken-4'
+          secondaryColor: 'orange darken-3'
         },
-        //* Поисковое поле для списка прдеприятий.
+        //* Поисковое поле для списка предприятий.
         companiesListSearch: '',
         //* Поисковое поле для списка цехов.
         divisionsListSearch: '',
@@ -416,25 +646,8 @@
       }).catch(err => {
         this.errorHandler(err)
       })
-      //* Подгружаем все компании для последующей работы.
-      Axios.get(`${GKP7API}/api/v1/companies`, {
-        headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-      }).then(({data}) => {
-        if (data.success === true) {
-          this.companies = data.companies
-          this.snackBar.show = true
-          this.snackBar.color = 'green darken-1 white--text'
-          this.snackBar.message = 'Компании загружены'
-          this.snackBar.timeout = 1000
-        } else {
-          this.snackBar.show = true
-          this.snackBar.color = 'red darken-1 white--text'
-          this.snackBar.message = 'Компаний не найдено'
-          this.snackBar.timeout = 5000
-        }
-      }).catch(err => {
-        this.errorHandler(err)
-      })
+      //* Подгружаем все предприятия из базы данных.
+      this.getAllCompanies()
     },
     methods: {
       //* Открыть диалог списка цехов..
@@ -457,17 +670,117 @@
         this.currentDivisionItem = {}
         this.departmentsListDialog.show = false
       },
-      //* Открыть диалог редактирования предприятия/цеха/участка.
-      openEditDialog (item) {
-        console.log('1')
+      //* Открыть диалог добавления предприятия/цеха/участка.
+      openAddDialog (type) {
+        if (type === 'company') {
+          this.currentAddItem = {
+            'companyId': '',
+            'companyName': ' ',
+            'companyRate': ' '
+          }
+        } else if (type === 'division') {
+          this.currentAddItem = {
+            'divisionId': '',
+            'divisionFullName': ' ',
+            'divisionName': ' '
+          }
+        } else if (type === 'department') {
+          this.currentAddItem = {
+            'departmentId': '',
+            'departmentName': ' '
+          }
+        } else {
+          this.snackBar.show = true
+          this.snackBar.color = 'red lighten-1'
+          this.snackBar.message = 'Не знаю, что добавлять.'
+        }
+        this.addDialog.show = true
       },
-      //* Нет, не редактировать предприятие/цех/участок.
-      noEditDialog (item) {
-        console.log('1')
+      //* Нет, я не добавляю.
+      noAddDialog () {
+        this.addDialog.show = false
+        this.currentAddItem = {}
       },
-      //* Да, редактировать предприятие/цех/участок.
-      yesEditDialog (item) {
-        console.log('1')
+      //* Да, я добавляю.
+      yesAddDialog () {
+        if (this.currentAddItem.companyId) {
+          //* Добавляем предприятие в базу данных.
+          Axios.post(`${GKP7API}/api/v1/company/`, {
+            'companyId': this.currentAddItem.companyId,
+            'companyName': this.currentAddItem.companyName,
+            'companyRate': this.currentAddItem.companyRate
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              //* Обновляем список предприятий на фронтенде.
+              this.getAllCompanies()
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 2000
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+            this.snackBar.message = res.data.message
+            this.snackBar.show = true
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else if (this.currentAddItem.divisionId) {
+          //* Добавляем предприятие в базу данных.
+          Axios.post(`${GKP7API}/api/v1/company/${this.currentCompanyItem.companyId}`, {
+            'divisionId': this.currentAddItem.divisionId,
+            'divisionFullName': this.currentAddItem.divisionFullName,
+            'divisionName': this.currentAddItem.divisionName
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              //* Обновляем список предприятий на фронтенде.
+              this.getAllCompanies()
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 2000
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+            this.snackBar.show = true
+            this.snackBar.message = res.data.message
+            this.divisionsListDialog.show = false
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else if (this.currentAddItem.departmentId) {
+          //* Добавляем предприятие в базу данных.
+          Axios.post(`${GKP7API}/api/v1/company/${this.currentCompanyItem.companyId}/${this.currentDivisionItem.divisionId}`, {
+            'departmentId': this.currentAddItem.departmentId,
+            'departmentName': this.currentAddItem.departmentName
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              //* Обновляем список предприятий на фронтенде.
+              this.getAllCompanies()
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 2000
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+            this.snackBar.show = true
+            this.snackBar.message = res.data.message
+            this.divisionsListDialog.show = false
+            this.departmentsListDialog.show = false
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else {
+          this.snackBar.show = true
+          this.snackBar.color = 'red lighten-1'
+          this.snackBar.message = 'Не знаю, что добавлять.'
+        }
+        this.currentAddItem = {}
+        this.addDialog.show = false
       },
       //* Открыть диалог удаления предприятия/цеха/участка.
       openRemoveDialog (item) {
@@ -570,38 +883,117 @@
         this.removeDialog.show = false
         this.currentRemoveItem = {}
       },
-      //* Методы работы с диалогом добавления предприятия.
-      openAddCompanyDialog () {
-        this.addCompanyDialog.show = true
+      //* Открыть диалог редактирования предприятия/цеха/участка.
+      openEditDialog (item) {
+        this.currentEditItem = item
+        this.editDialog.show = true
       },
-      saveAddCompanyDialog () {
-        console.log('save add company dialog')
-        this.addCompanyDialog.show = false
+      //* Нет, не редактировать предприятие/цех/участок.
+      noEditDialog () {
+        this.currentEditItem = {}
+        this.editDialog.show = false
       },
-      closeAddCompanyDialog () {
-        this.addCompanyDialog.show = false
+      //* Да, редактировать предприятие/цех/участок.
+      yesEditDialog () {
+        if (this.currentEditItem.companyId) {
+          //* Удаляем предприятие из базы данных.
+          Axios.put(`${GKP7API}/api/v1/company/${this.currentEditItem.companyId}`, {
+            'companyId': this.currentEditItem.companyId,
+            'companyName': this.currentEditItem.companyName,
+            'companyRate': this.currentEditItem.companyRate
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              //* Обновляем список предприятий на фронтенде.
+              this.getAllCompanies()
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 1000
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+            this.snackBar.message = res.data.message
+            this.snackBar.show = true
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else if (this.currentEditItem.divisionId) {
+          //* Удаляем предприятие из базы данных.
+          Axios.put(`${GKP7API}/api/v1/company/${this.currentCompanyItem.companyId}/${this.currentEditItem.divisionId}/`, {
+            'divisionId': this.currentEditItem.divisionId,
+            'divisionFullName': this.currentEditItem.divisionFullName,
+            'divisionName': this.currentEditItem.divisionName
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              //* Обновляем список предприятий на фронтенде.
+              this.getAllCompanies()
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 1000
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+            this.snackBar.message = res.data.message
+            this.snackBar.show = true
+            this.divisionsListDialog.show = false
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else if (this.currentEditItem.departmentId) {
+          //* Удаляем предприятие из базы данных.
+          Axios.put(`${GKP7API}/api/v1/company/${this.currentCompanyItem.companyId}/${this.currentDivisionItem.divisionId}/${this.currentEditItem.departmentId}`, {
+            'departmentId': this.currentEditItem.departmentId,
+            'departmentName': this.currentEditItem.departmentName
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              //* Обновляем список предприятий на фронтенде.
+              this.getAllCompanies()
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 1000
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+            this.snackBar.message = res.data.message
+            this.snackBar.show = true
+            this.divisionsListDialog.show = false
+            this.departmentsListDialog.show = false
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else {
+          this.snackBar.show = true
+          this.snackBar.color = 'red lighten-1'
+          this.snackBar.message = 'Не знаю, что удалять.'
+        }
+        this.editDialog.show = false
+        this.currentRemoveItem = {}
       },
-      //* Методы работы с добавлением цеха.
-      openAddDivisionDialog () {
-        this.addCompanyDialog.show = true
-      },
-      saveAddDivisionDialog () {
-        console.log('save add division dialog')
-        this.addCompanyDialog.show = false
-      },
-      closeAddDivisionDialog () {
-        this.addCompanyDialog.show = false
-      },
-      //* Методы работы с добавлением участка.
-      openAddDepartmentDialog () {
-        this.addCompanyDialog.show = true
-      },
-      saveAddDepartmentDialog () {
-        console.log('save add department dialog')
-        this.addCompanyDialog.show = false
-      },
-      closeAddDepartmentDialog () {
-        this.addCompanyDialog.show = false
+      getAllCompanies () {
+        //* Подгружаем все компании для последующей работы.
+        Axios.get(`${GKP7API}/api/v1/companies`, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+        }).then(({data}) => {
+          if (data.success === true) {
+            this.companies = data.companies
+            this.snackBar.show = true
+            this.snackBar.color = 'green darken-1 white--text'
+            this.snackBar.message = 'Компании загружены'
+            this.snackBar.timeout = 1000
+          } else {
+            this.snackBar.show = true
+            this.snackBar.color = 'red darken-1 white--text'
+            this.snackBar.message = 'Компаний не найдено'
+            this.snackBar.timeout = 5000
+          }
+        }).catch(err => {
+          this.errorHandler(err)
+        })
       },
       errorHandler (err) {
         const status = err.response.status

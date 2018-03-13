@@ -74,7 +74,7 @@
     <v-dialog v-model="addPatientDialog.show" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">Добавить новоо пациента</span>
+          <span class="headline">Добавить нового пациента</span>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>

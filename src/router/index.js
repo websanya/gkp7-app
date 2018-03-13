@@ -10,6 +10,7 @@ import RGs from '@/components/pages/RGs/RGs'
 import MedosReg from '@/components/pages/Medos/MedosReg'
 import MedosDov from '@/components/pages/Medos/MedosDov'
 import MedosCompanies from '@/components/pages/Medos/MedosCompanies'
+import MedosHarms from '@/components/pages/Medos/MedosHarms'
 
 // Global components
 import Header from '@/components/header/Header'
