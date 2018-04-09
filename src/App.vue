@@ -32,10 +32,6 @@
     margin-right: 0;
   }
 
-  .date-picker-table {
-    height: auto;
-  }
-
   .footer {
     padding: 0 12px;
   }

@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import * as Auth from '@/components/pages/Authentication'
-
 // Pages
 import Home from '@/components/pages/Home'
 import Authentication from '@/components/pages/Authentication/Authentication'
@@ -11,7 +10,6 @@ import MedosReg from '@/components/pages/Medos/MedosReg'
 import MedosDov from '@/components/pages/Medos/MedosDov'
 import MedosCompanies from '@/components/pages/Medos/MedosCompanies'
 import MedosHarms from '@/components/pages/Medos/MedosHarms'
-
 // Global components
 import Header from '@/components/header/Header'
 import Footer from '@/components/footer/Footer'
@@ -48,6 +46,11 @@ const router = new Router({
       path: '/medos/companies',
       name: 'MedosCompanies',
       component: MedosCompanies
+    },
+    {
+      path: '/medos/harms',
+      name: 'MedosHarms',
+      component: MedosHarms
     },
     {
       path: '/vaccines',

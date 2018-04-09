@@ -14,17 +14,17 @@
               <v-layout row wrap>
                 <v-flex xs12 md4>
                   <v-text-field @keyup.enter="getPatients" :color="subSystemSecondaryColor" label="Фамилия"
-                                v-model="patientQuery.last_name" box>
+                                v-model="patientQuery.lastName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
                   <v-text-field @keyup.enter="getPatients" :color="subSystemSecondaryColor" label="Имя"
-                                v-model="patientQuery.first_name" box>
+                                v-model="patientQuery.firstName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
                   <v-text-field @keyup.enter="getPatients" :color="subSystemSecondaryColor" label="Отчество"
-                                v-model="patientQuery.middle_name" box>
+                                v-model="patientQuery.middleName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12>
@@ -41,7 +41,7 @@
                 <template slot="items" slot-scope="props">
                   <tr>
                     <td>{{ props.item.fio }}</td>
-                    <td>{{ props.item.birthDate | formatDate }}</td>
+                    <td>{{ props.item.dateBirth | formatDate }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
                     <td width="211px">
                       <v-btn @click.native="addVaccineDialog(props.item)" :color="subSystemPrimaryColor" icon>
@@ -288,11 +288,7 @@
         showSnackbar: false,
         showAddDialog: false,
         showListDialog: false,
-        patientQuery: {
-          first_name: '',
-          last_name: '',
-          middle_name: ''
-        },
+        patientQuery: {},
         showDateVaccination: false,
         patients: [],
         currentUser: {},
@@ -501,21 +497,21 @@
     methods: {
       //* Запрашиваем список пациентов по введенным ФИО.
       getPatients () {
-        Axios.post(`${GKP7API}/api/v1/patient`, {
-          'last_name': this.patientQuery.last_name,
-          'first_name': this.patientQuery.first_name,
-          'middle_name': this.patientQuery.middle_name
-        }, {
+        let tempQuery = {}
+        tempQuery.lastName = (this.patientQuery.lastName === undefined) ? ' ' : this.patientQuery.lastName
+        tempQuery.firstName = (this.patientQuery.firstName === undefined) ? ' ' : this.patientQuery.firstName
+        tempQuery.middleName = (this.patientQuery.middleName === undefined) ? ' ' : this.patientQuery.middleName
+        Axios.get(`${GKP7API}/api/v1/patient/${tempQuery.lastName}/${tempQuery.firstName}/${tempQuery.middleName}/`, {
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
         }).then(res => {
           if (res.data.success) {
-            this.showSnackbar = false
+            this.snackBar.show = false
             this.patients = res.data.patients
           } else {
             this.patients = []
-            this.showSnackbar = true
-            this.snackColor = 'yellow accent-3 black--text'
-            this.snackMessage = res.data.message
+            this.snackBar.show = true
+            this.snackBar.color = 'yellow accent-3 black--text'
+            this.snackBar.message = res.data.message
           }
         }).catch(err => {
           this.errorHandler(err)
