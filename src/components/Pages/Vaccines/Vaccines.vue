@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <app-header :subsystem="subSystemPrimaryColor" subtitle="Прививки">
+    <app-header :subsystem="subSystem.primaryColor" subtitle="Прививки">
     </app-header>
     <v-content>
       <v-container fluid fill-height>
@@ -13,22 +13,22 @@
             <v-container grid-list-md>
               <v-layout row wrap>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystemSecondaryColor" label="Фамилия"
+                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Фамилия"
                                 v-model="patientQuery.lastName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystemSecondaryColor" label="Имя"
+                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Имя"
                                 v-model="patientQuery.firstName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystemSecondaryColor" label="Отчество"
+                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Отчество"
                                 v-model="patientQuery.middleName" box>
                   </v-text-field>
                 </v-flex>
-                <v-flex xs12>
-                  <v-btn @click.native="getPatients" :color="subSystemSecondaryColor" dark large block>Найти</v-btn>
+                <v-flex xs12 md12>
+                  <v-btn @click.native="getPatients" :color="subSystem.primaryColor" dark large block>Найти</v-btn>
                 </v-flex>
               </v-layout>
               <v-data-table
@@ -41,13 +41,13 @@
                 <template slot="items" slot-scope="props">
                   <tr>
                     <td>{{ props.item.fio }}</td>
-                    <td>{{ props.item.dateBirth | formatDate }}</td>
+                    <td>{{ props.item.dateBirth }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
                     <td width="211px">
-                      <v-btn @click.native="addVaccineDialog(props.item)" :color="subSystemPrimaryColor" icon>
+                      <v-btn @click.native="addVaccineDialog(props.item)" :color="subSystem.primaryColor" icon>
                         <v-icon color="white">note_add</v-icon>
                       </v-btn>
-                      <v-btn @click.native="showVaccinesDialog(props.item)" :color="subSystemSecondaryColor" icon>
+                      <v-btn @click.native="showVaccinesDialog(props.item)" :color="subSystem.secondaryColor" icon>
                         <v-icon color="white">local_drink</v-icon>
                       </v-btn>
                       <v-btn v-if="props.item.hasActiveMedos" @click.native="console.log('medos')"
@@ -63,15 +63,15 @@
         </v-layout>
       </v-container>
     </v-content>
-    <app-footer :subsystem="subSystemPrimaryColor">
+    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser.fio">
     </app-footer>
 
-    <v-snackbar :timeout="snackTimeout"
+    <v-snackbar :timeout="snackBar.timeout"
                 right="right"
-                :color="snackColor"
-                v-model="showSnackbar">
-      {{ snackMessage }}
-      <v-btn flat icon @click.native="showSnackbar = false">
+                :color="snackBar.color"
+                v-model="snackBar.show">
+      {{ snackBar.message }}
+      <v-btn flat icon @click.native="snackBar.show = false">
         <v-icon>clear</v-icon>
       </v-btn>
     </v-snackbar>
@@ -91,7 +91,7 @@
                     label="Прививка"
                     @blur="updateVocabularyDrug"
                     autocomplete
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-select>
               </v-flex>
@@ -102,7 +102,7 @@
                     label="Препарат"
                     @blur="updateVocabularySeries"
                     autocomplete
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-select>
               </v-flex>
@@ -113,7 +113,7 @@
                     label="Серия"
                     @blur="updateDateExpiration"
                     autocomplete
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-select>
               </v-flex>
@@ -121,7 +121,7 @@
                 <v-text-field
                     v-model="currentVaccine.dateExpiration"
                     label="Срок"
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                     disabled
                 >
                 </v-text-field>
@@ -134,7 +134,7 @@
                     v-model="currentVaccine.invasionMethod"
                     label="Метод введения"
                     autocomplete
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-select>
               </v-flex>
@@ -144,7 +144,7 @@
                     mask="#.##"
                     return-masked-value
                     label="Доза"
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-text-field>
               </v-flex>
@@ -154,7 +154,7 @@
                     v-model="currentVaccine.vaccineType"
                     label="Тип вакцинации"
                     autocomplete
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-select>
               </v-flex>
@@ -164,7 +164,7 @@
                     v-model="currentVaccine.riskGroup"
                     label="Группа риска"
                     autocomplete
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-select>
               </v-flex>
@@ -176,7 +176,7 @@
                     mask="##.##.####"
                     return-masked-value
                     label="Дата вакцинации"
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-text-field>
               </v-flex>
@@ -186,7 +186,7 @@
                     mask="##.##.####"
                     return-masked-value
                     label="Дата ревакцинации"
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-text-field>
               </v-flex>
@@ -196,7 +196,7 @@
                     v-model="currentVaccine.payment"
                     label="Оплата"
                     autocomplete
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                 >
                 </v-select>
               </v-flex>
@@ -204,7 +204,7 @@
                 <v-text-field
                     v-model="currentUser.fio"
                     label="Пользователь"
-                    :color="subSystemPrimaryColor"
+                    :color="subSystem.primaryColor"
                     disabled
                 >
                 </v-text-field>
@@ -215,8 +215,8 @@
         <v-card-actions>
           <v-spacer>
           </v-spacer>
-          <v-btn :color="subSystemSecondaryColor" flat @click.native="closeAddDialog">Закрыть</v-btn>
-          <v-btn :color="subSystemPrimaryColor" class="white--text" @click.native="saveAddDialog">Сохранить</v-btn>
+          <v-btn :color="subSystem.secondaryColor" flat @click.native="closeAddDialog">Закрыть</v-btn>
+          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="saveAddDialog">Сохранить</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -246,10 +246,10 @@
                   <td>{{ props.item.dateVaccination | formatDate }}</td>
                   <td>{{ props.item.dateRevaccination | formatDate }}</td>
                   <td width="156px">
-                    <v-btn @click.native="console.log('lol')" :color="subSystemPrimaryColor" icon>
+                    <v-btn @click.native="document.console.log('lol')" :color="subSystem.primaryColor" icon>
                       <v-icon color="white">edit</v-icon>
                     </v-btn>
-                    <v-btn @click.native="console.log('lol')" color="red lighten-1" icon>
+                    <v-btn @click.native="document.console.log('lol')" color="red lighten-1" icon>
                       <v-icon color="white">clear</v-icon>
                     </v-btn>
                   </td>
@@ -264,7 +264,7 @@
         <v-card-actions>
           <v-spacer>
           </v-spacer>
-          <v-btn @click.native="closeVaccinesDialog" :color="subSystemPrimaryColor" flat>Закрыть</v-btn>
+          <v-btn @click.native="closeVaccinesDialog" :color="subSystem.primaryColor" flat>Закрыть</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -280,12 +280,6 @@
   export default {
     data () {
       return {
-        subSystemPrimaryColor: 'green darken-4',
-        subSystemSecondaryColor: 'brown darken-2',
-        snackMessage: '',
-        snackTimeout: 10000,
-        snackColor: '',
-        showSnackbar: false,
         showAddDialog: false,
         showListDialog: false,
         patientQuery: {},
@@ -480,7 +474,19 @@
           '3 - ОДУ',
           '4 - ЧП',
           '5 - Общепит'
-        ]
+        ],
+        //* Все, что связано с snackbar, который всплывает во время ошибок.
+        snackBar: {
+          show: false,
+          message: '',
+          timeout: 10000,
+          color: ''
+        },
+        //* Цвета для данной подсистемы.
+        subSystem: {
+          primaryColor: 'green darken-4',
+          secondaryColor: 'brown darken-2'
+        }
       }
     },
     //* Подгружаем объект залогиненного пользователя для последующего использования.
@@ -507,6 +513,9 @@
           if (res.data.success) {
             this.snackBar.show = false
             this.patients = res.data.patients
+            this.patients.forEach((item) => {
+              item.dateBirth = this.dateFromIso(item.dateBirth)
+            })
           } else {
             this.patients = []
             this.snackBar.show = true
@@ -655,6 +664,22 @@
           this.snackMessage = 'Вы не авторизованы.'
         }
         this.snackMessage = err.response.data.message
+      },
+      //* Перевод даты из ISO формата.
+      dateFromIso (inputDate) {
+        const date = new Date(inputDate)
+        let year = date.getFullYear()
+        let month = date.getMonth() + 1
+        let dt = date.getDate()
+
+        if (dt < 10) {
+          dt = '0' + dt
+        }
+        if (month < 10) {
+          month = '0' + month
+        }
+
+        return dt + '.' + month + '.' + year
       },
       //* Переводим в ISODate.
       toDate (dateStr) {

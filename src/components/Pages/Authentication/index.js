@@ -45,11 +45,18 @@ export default {
   },
 
   checkAuthentication () {
-    const token = document.cookie
+    const token = this.getCookie('token')
     this.user.authenticated = !!token
   },
 
   getAuthenticationHeader (context) {
     return `Bearer ${context.$cookie.get('token')}`
+  },
+
+  getCookie (name) {
+    let matches = document.cookie.match(new RegExp(
+      `(?:^|; )${name.replace(/([.$?*|{}()[\]\\+^])/g, '\\$1')}=([^;]*)`
+    ))
+    return matches ? decodeURIComponent(matches[1]) : undefined
   }
 }

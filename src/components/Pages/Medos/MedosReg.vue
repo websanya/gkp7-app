@@ -515,7 +515,8 @@
           <v-spacer>
           </v-spacer>
           <v-btn :color="subSystem.primaryColor" flat @click.native="closeRegisterMedicalExamination">Закрыть</v-btn>
-          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="saveRegisterMedicalExamination">Зарегистрировать
+          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="saveRegisterMedicalExamination">
+            Зарегистрировать
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -535,72 +536,56 @@
       return {
         //* Пользователь, который осуществил вход в систему, подгружается в mounted.
         currentUser: {},
-        //* Вредности для последующей работы.
-        harms: [],
         //* Все предприятия, которые есть в системе на момент открытия.
         companies: [],
         //* Все типы мед. осмотра.
         medosTypes: [
           {
             value: {
-              medosType: {
-                typeId: 1,
-                typeName: 'поступление на работу'
-              }
+              typeId: 1,
+              typeName: 'поступление на работу'
             },
             text: '1 - поступление на работу'
           },
           {
             value: {
-              medosType: {
-                typeId: 2,
-                typeName: 'периодический проф. осмотр'
-              }
+              typeId: 2,
+              typeName: 'периодический проф. осмотр'
             },
             text: '2 - периодический проф. осмотр'
           },
           {
             value: {
-              medosType: {
-                typeId: 3,
-                typeName: 'перевод из цеха в цех'
-              }
+              typeId: 3,
+              typeName: 'перевод из цеха в цех'
             },
             text: '3 - перевод из цеха в цех'
           },
           {
             value: {
-              medosType: {
-                typeId: 5,
-                typeName: 'по санитарной книжке'
-              }
+              typeId: 5,
+              typeName: 'по санитарной книжке'
             },
             text: '5 - по санитарной книжке'
           },
           {
             value: {
-              medosType: {
-                typeId: 6,
-                typeName: 'водительская мед. комиссия'
-              }
+              typeId: 6,
+              typeName: 'водительская мед. комиссия'
             },
             text: '6 - водительская мед. комиссия'
           },
           {
             value: {
-              medosType: {
-                typeId: 7,
-                typeName: 'поступление в учебное заведение'
-              }
+              typeId: 7,
+              typeName: 'поступление в учебное заведение'
             },
             text: '7 - поступление в учебное заведение'
           },
           {
             value: {
-              medosType: {
-                typeId: 8,
-                typeName: 'осмотр на ношение оружия'
-              }
+              typeId: 8,
+              typeName: 'осмотр на ношение оружия'
             },
             text: '8 - осмотр на ношение оружия'
           }
@@ -669,8 +654,6 @@
     mounted () {
       //* Подгружаем пользователя, который осуществил вход.
       this.getCurrentUser()
-      //* Подгружаем все вредности из базы данных.
-      this.getAllHarms()
       //* Подгружаем все предприятия из базы данных.
       this.getAllCompanies()
     },
@@ -773,7 +756,6 @@
         this.editJobDialog.show = true
         this.updateCompanyDivisions()
         this.updateDivisionDepartments()
-        console.log(this.currentEditPatient.activeJob.jobCompany.jobCompanyId)
       },
       closeEditJobDialog () {
         this.editJobDialog.show = false
@@ -829,8 +811,21 @@
       },
       //* Методы для диалога постановки на мед. осмотр.
       openRegisterMedicalExamination (item) {
-        this.currentEditPatient = item
-        this.addMedosDialog.show = true
+        console.log(item)
+        if (item.activeJob === undefined) {
+          this.snackBar.show = true
+          this.snackBar.color = 'red darken-1 white--text'
+          this.snackBar.message = 'У пациента не указано место работы'
+          this.snackBar.timeout = 5000
+        } else if (item.hasActiveMedos === true) {
+          this.snackBar.show = true
+          this.snackBar.color = 'red darken-1 white--text'
+          this.snackBar.message = 'Пациент уже зарегистрирован на мед. осмотр'
+          this.snackBar.timeout = 5000
+        } else {
+          this.currentEditPatient = item
+          this.addMedosDialog.show = true
+        }
       },
       closeRegisterMedicalExamination () {
         this.currentEditPatient = {}
@@ -838,7 +833,6 @@
       },
       saveRegisterMedicalExamination () {
         this.currentMedos.medosJob = this.currentEditPatient.activeJob
-        this.currentMedos.medosIsActive = true
         let tempObj = {
           'updatedBy': this.currentUser._id,
           'currentMedos': this.currentMedos
@@ -957,27 +951,6 @@
             this.snackBar.show = true
             this.snackBar.color = 'yellow accent-3 black--text'
             this.snackBar.message = res.data.message
-          }
-        }).catch(err => {
-          this.errorHandler(err)
-        })
-      },
-      //* Подгружаем все вредности для последующей работы.
-      getAllHarms () {
-        Axios.get(`${GKP7API}/api/v1/harms`, {
-          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-        }).then(({data}) => {
-          if (data.success === true) {
-            this.harms = data.harms
-            this.snackBar.show = true
-            this.snackBar.color = 'green darken-1 white--text'
-            this.snackBar.message = 'Вредности загружены'
-            this.snackBar.timeout = 1000
-          } else {
-            this.snackBar.show = true
-            this.snackBar.color = 'red darken-1 white--text'
-            this.snackBar.message = 'Вредностей не найдено'
-            this.snackBar.timeout = 5000
           }
         }).catch(err => {
           this.errorHandler(err)
