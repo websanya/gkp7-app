@@ -317,7 +317,7 @@
                 </v-select>
               </v-flex>
             </v-layout>
-            <v-layout ro wrap>
+            <v-layout row wrap>
               <v-flex sm12 md12>
                 <v-text-field
                     label="Анамнез"
@@ -358,7 +358,7 @@
             ></v-checkbox>
           </v-flex>
         </v-card-title>
-        <v-card-text ref="print" id="section-to-print">
+        <v-card-text ref="print">
           <v-list two-line subheader>
             <!-- Показ докторов -->
             <v-subheader>Доктора <span v-if="showAddonAppointments">- (обязательные)</span></v-subheader>

@@ -89,7 +89,7 @@
           </v-list-tile-action>
           <v-list-tile-content>
             <router-link :to="'/rgs'">
-              <v-list-tile-title>Флюоротека</v-list-tile-title>
+              <v-list-tile-title>Снимки</v-list-tile-title>
             </router-link>
           </v-list-tile-content>
         </v-list-tile>
