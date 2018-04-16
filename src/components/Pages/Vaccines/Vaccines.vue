@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <div>
     <app-header :subsystem="subSystem.primaryColor" subtitle="Прививки">
     </app-header>
     <v-content>
@@ -268,7 +268,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-app>
+  </div>
 </template>
 
 <script>

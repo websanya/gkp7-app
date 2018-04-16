@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <div>
 
     <!-- Верхняя рамка приложения + боковое меню -->
     <app-header :subsystem="subSystem.primaryColor" subtitle="Редактор предприятий">
@@ -570,7 +570,7 @@
     </v-dialog>
     <!-- / Диалог удаления предприятия/цеха/участка -->
 
-  </v-app>
+  </div>
 </template>
 
 <script>

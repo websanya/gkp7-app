@@ -1,9 +1,11 @@
 <template>
-  <transition>
-    <keep-alive>
-      <router-view/>
-    </keep-alive>
-  </transition>
+  <v-app>
+    <transition>
+      <keep-alive>
+        <router-view/>
+      </keep-alive>
+    </transition>
+  </v-app>
 </template>
 
 <script>
@@ -14,7 +16,12 @@
 
 <style>
   .application.theme--light {
-    /*background: #dadada;*/
+    background: #f1f1f1;
+  }
+
+  .application--wrap {
+    align-items: center;
+    justify-content: center;
   }
 
   table.table thead th {
@@ -37,6 +44,6 @@
   }
 
   .btn--large.btn--flat {
-    border: 1px solid rgba(0,0,0,.42);
+    border: 1px solid rgba(0, 0, 0, .42);
   }
 </style>

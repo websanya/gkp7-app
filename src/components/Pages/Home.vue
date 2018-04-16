@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <div>
     <app-header subsystem="indigo" subtitle="Домашняя">
     </app-header>
     <v-content>
@@ -52,7 +52,7 @@
                 v-model="showSnackbar">
       {{ snackMessage }}
     </v-snackbar>
-  </v-app>
+  </div>
 </template>
 
 <script>

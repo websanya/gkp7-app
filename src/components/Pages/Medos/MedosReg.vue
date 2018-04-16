@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <div>
     <app-header :subsystem="subSystem.primaryColor" subtitle="Регистратура профосмотра">
     </app-header>
     <v-content>
@@ -522,7 +522,7 @@
       </v-card>
     </v-dialog>
     <!-- / Диалог поставноки на проф. осмотр -->
-  </v-app>
+  </div>
 </template>
 
 <script>

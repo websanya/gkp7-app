@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <div>
     <app-header :subsystem="subSystem.primaryColor" subtitle="Доврачебный кабинет">
     </app-header>
     <v-content>
@@ -424,7 +424,7 @@
     </v-dialog>
     <!-- / Диалог бегунка с назначениями -->
 
-  </v-app>
+  </div>
 </template>
 
 <script>

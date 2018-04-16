@@ -6,6 +6,7 @@ import Home from '@/components/pages/Home'
 import Authentication from '@/components/pages/Authentication/Authentication'
 import Vaccines from '@/components/pages/Vaccines/Vaccines'
 import RGs from '@/components/pages/RGs/RGs'
+import Lab from '@/components/pages/Lab/Lab'
 import MedosReg from '@/components/pages/Medos/MedosReg'
 import MedosDov from '@/components/pages/Medos/MedosDov'
 import MedosCompanies from '@/components/pages/Medos/MedosCompanies'
@@ -61,6 +62,11 @@ const router = new Router({
       path: '/rgs',
       name: 'RGs',
       component: RGs
+    },
+    {
+      path: '/lab',
+      name: 'Lab',
+      component: Lab
     }
   ]
 })

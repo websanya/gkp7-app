@@ -1,6 +1,5 @@
 <template>
-  <v-app>
-
+  <div>
     <app-header :subsystem="subSystem.primaryColor" subtitle="Снимки">
     </app-header>
     <v-content>
@@ -349,8 +348,7 @@
       </v-card>
     </v-dialog>
     <!-- Диалог внесения заключения на снимок -->
-
-  </v-app>
+  </div>
 </template>
 
 <script>
