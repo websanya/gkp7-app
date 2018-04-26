@@ -2,15 +2,16 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import * as Auth from '@/components/pages/Authentication'
 // Pages
-import Home from '@/components/pages/Home'
 import Authentication from '@/components/pages/Authentication/Authentication'
-import Vaccines from '@/components/pages/Vaccines/Vaccines'
-import RGs from '@/components/pages/RGs/RGs'
-import Lab from '@/components/pages/Lab/Lab'
-import MedosReg from '@/components/pages/Medos/MedosReg'
-import MedosDov from '@/components/pages/Medos/MedosDov'
-import MedosCompanies from '@/components/pages/Medos/MedosCompanies'
-import MedosHarms from '@/components/pages/Medos/MedosHarms'
+import MedosReception from '@/components/pages/Medos/MedosReception'
+import MedosPremedical from '@/components/pages/Medos/MedosPremedical'
+import MedosDoctor from '@/components/pages/Medos/MedosDoctor'
+import MedosExam from '@/components/pages/Medos/MedosExam'
+import Radiography from '@/components/pages/Radiography/Radiography'
+import Laboratory from '@/components/pages/Laboratory/Laboratory'
+import Vaccination from '@/components/pages/Vaccination/Vaccination'
+import Users from '@/components/pages/Admin/Users'
+import Companies from '@/components/pages/Admin/Companies'
 // Global components
 import Header from '@/components/header/Header'
 import Footer from '@/components/footer/Footer'
@@ -24,59 +25,87 @@ Vue.use(Router)
 const router = new Router({
   routes: [
     {
-      path: '/',
-      name: 'Home',
-      component: Home
-    },
-    {
       path: '/login',
       name: 'Auth2',
       component: Authentication
     },
     {
-      path: '/medos/reg',
-      name: 'MedosReg',
-      component: MedosReg
+      path: '/medos/reception',
+      name: 'MedosReception',
+      component: MedosReception
     },
     {
-      path: '/medos/dov',
-      name: 'MedosDov',
-      component: MedosDov
+      path: '/medos/premedical',
+      name: 'MedosPremedical',
+      component: MedosPremedical
     },
     {
-      path: '/medos/companies',
-      name: 'MedosCompanies',
-      component: MedosCompanies
+      path: '/medos/doctor',
+      name: 'MedosDoctor',
+      component: MedosDoctor
     },
     {
-      path: '/medos/harms',
-      name: 'MedosHarms',
-      component: MedosHarms
+      path: '/medos/exam',
+      name: 'MedosExam',
+      component: MedosExam
+    },
+    {
+      path: '/radiography',
+      name: 'Radiography',
+      component: Radiography
+    },
+    {
+      path: '/laboratory',
+      name: 'Laboratory',
+      component: Laboratory
     },
     {
       path: '/vaccines',
-      name: 'Vaccines',
-      component: Vaccines
+      name: 'Vaccination',
+      component: Vaccination
     },
     {
-      path: '/rgs',
-      name: 'RGs',
-      component: RGs
+      path: '/admin/users',
+      name: 'Users',
+      component: Users
     },
     {
-      path: '/lab',
-      name: 'Lab',
-      component: Lab
+      path: '/admin/companies',
+      name: 'Companies',
+      component: Companies
     }
   ]
 })
 
 router.beforeEach((to, from, next) => {
+  let authenticated = Auth.default.user.authenticated
+  let roles = Auth.default.user.roles
   if (to.path !== '/login') {
-    if (Auth.default.user.authenticated) {
+    if (authenticated) {
       next()
     } else {
       router.push('/login')
+    }
+    if (from.path === '/login') {
+      if (roles.superuser) {
+        router.push('/admin/users')
+      } else if (roles.medos && (roles.medos.doctor !== 0 || roles.medos.admin)) {
+        router.push('/medos/doctor')
+      } else if (roles.medos && roles.medos.exam !== 0) {
+        router.push('/medos/exam')
+      } else if (roles.medos && roles.medos.receptionist) {
+        router.push('/medos/reception')
+      } else if (roles.medos && roles.medos.premedical) {
+        router.push('/medos/premedical')
+      } else if (roles.radiography && (roles.medos.radiography.admin || roles.medos.radiography.assistant)) {
+        router.push('/radiography')
+      } else if (roles.laboratory && (roles.medos.laboratory.admin || roles.medos.laboratory.assistant)) {
+        router.push('/laboratory')
+      } else if (roles.vaccination && (roles.medos.vaccination.admin || roles.medos.vaccination.assistant)) {
+        router.push('/vaccination')
+      } else {
+        next()
+      }
     }
   } else {
     next()

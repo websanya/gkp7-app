@@ -4,7 +4,10 @@ import router from '@/router'
 const GKP7API = `http://${window.location.hostname}:3001`
 
 export default {
-  user: {authenticated: false},
+  user: {
+    authenticated: false,
+    roles: {}
+  },
 
   authenticate (context, credentials, redirect) {
     Axios.post(`${GKP7API}/api/v1/auth`, credentials)
@@ -14,6 +17,7 @@ export default {
         context.validLogin = true
 
         this.user.authenticated = true
+        this.user.roles = data.user.roles
 
         if (redirect) router.push(redirect)
       })
@@ -36,12 +40,12 @@ export default {
       })
   },
 
-  signout (context, redirect) {
+  signOut (context, redirect) {
     context.$cookie.delete('token')
     context.$cookie.delete('user_id')
     this.user.authenticated = false
 
-    if (redirect) router.push(redirect)
+    router.push('/')
   },
 
   checkAuthentication () {

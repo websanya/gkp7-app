@@ -46,4 +46,8 @@
   .btn--large.btn--flat {
     border: 1px solid rgba(0, 0, 0, .42);
   }
+
+  .uwd-container {
+    width: 100%;
+  }
 </style>

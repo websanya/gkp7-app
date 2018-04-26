@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <app-header :subsystem="subSystem.primaryColor" subtitle="Доврачебный кабинет">
+  <div class=uwd-container>
+    <app-header :subsystem="subSystem.primaryColor" subtitle="Доврачебный кабинет" :currentUser="currentUser">
     </app-header>
     <v-content>
       <v-container fluid fill-height>
@@ -86,7 +86,7 @@
         </v-layout>
       </v-container>
     </v-content>
-    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser.fio">
+    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser">
     </app-footer>
 
     <v-snackbar :timeout="snackBar.timeout"
@@ -358,12 +358,13 @@
             ></v-checkbox>
           </v-flex>
         </v-card-title>
-        <v-card-text ref="print">
+        <v-card-text ref="print"
+                     v-if="currentEditPatient.activeMedos && currentEditPatient.activeMedos.medosDoctors && currentEditPatient.activeMedos.medosExams">
           <v-list two-line subheader>
             <!-- Показ докторов -->
             <v-subheader>Доктора <span v-if="showAddonAppointments">- (обязательные)</span></v-subheader>
             <v-list-tile
-                v-for="doctor in appointmentsForHarms.doctors.mustDoctors"
+                v-for="doctor in currentEditPatient.activeMedos.medosDoctors.mustDoctors"
                 :key="doctor.doctorId"
             >
               <v-list-tile-content>
@@ -375,7 +376,7 @@
               <v-divider></v-divider>
               <v-subheader>Доктора <span v-if="showAddonAppointments">- (дополнительные)</span></v-subheader>
               <v-list-tile
-                  v-for="doctor in appointmentsForHarms.doctors.addonDoctors"
+                  v-for="doctor in currentEditPatient.activeMedos.medosDoctors.addonDoctors"
                   :key="doctor.doctorId"
               >
                 <v-list-tile-content>
@@ -389,7 +390,7 @@
             <!-- Показ обследований -->
             <v-subheader>Обследования <span v-if="showAddonAppointments">- (обязательные)</span></v-subheader>
             <v-list-tile
-                v-for="exam in appointmentsForHarms.exams.mustExams"
+                v-for="exam in currentEditPatient.activeMedos.medosExams.mustExams"
                 :key="exam.examId"
             >
               <v-list-tile-content>
@@ -401,7 +402,7 @@
               <v-divider></v-divider>
               <v-subheader>Обследования <span v-if="showAddonAppointments">- (дополнительные)</span></v-subheader>
               <v-list-tile
-                  v-for="exam in appointmentsForHarms.exams.addonExams"
+                  v-for="exam in currentEditPatient.activeMedos.medosExams.addonExams"
                   :key="exam.doctorId"
               >
                 <v-list-tile-content>
@@ -568,9 +569,73 @@
       },
       yesEditHarmsDialog () {
         this.currentMedos.medosHarms = this.currentPatientHarms
-        //* Добавляем вредности в базу данных.
+        //* Все вредности в массив.
+        let tmpHarms = this.currentMedos.medosHarms
+        //* Инифициализируем пустые массивы для неотфильтрованных назначений по вредностям.
+        let allTheMustDoctors = []
+        let allTheAddonDoctors = []
+        let allTheMustExams = []
+        let allTheAddonExams = []
+        //* Просматриваем справочник вредностей и отбираем те, которые нам нужны.
+        tmpHarms.map((tmpHarm) => {
+          let tmpHarmDb = this.harms.find(harm => harm.harmId === tmpHarm.harmId)
+          tmpHarmDb.doctors.map((doctor) => {
+            doctor.mustDoctors.map((mustDoctor) => {
+              allTheMustDoctors.push(mustDoctor)
+            })
+            doctor.addonDoctors.map((addonDoctor) => {
+              allTheAddonDoctors.push(addonDoctor)
+            })
+          })
+          tmpHarmDb.exams.map((exam) => {
+            exam.mustExams.map((mustExam) => {
+              allTheMustExams.push(mustExam)
+            })
+            exam.addonExams.map((addonDoctor) => {
+              allTheAddonExams.push(addonDoctor)
+            })
+          })
+        })
+        if (!this.currentEditPatient.sex) {
+          allTheMustDoctors.push({
+            doctorId: 12,
+            doctorName: 'Гинеколог',
+            doctorRoom: '113 кабинет'
+          })
+        }
+        let patientBirthDate = this.dateToIso(this.currentEditPatient.dateBirth)
+        let patientAge = this.calculateAge(patientBirthDate)
+        if (patientAge >= 42) {
+          allTheMustExams.push({
+            examId: 46,
+            examName: 'Маммография',
+            examRoom: '416 кабинет'
+          })
+        }
+        //* Отбираем только уникальные назначения.
+        let uniqueMustDoctors = allTheMustDoctors.filter(
+          (doctor, index, self) => self.findIndex(d => d.doctorId === doctor.doctorId) === index
+        )
+        let uniqueAddonDoctors = allTheAddonDoctors.filter(
+          (doctor, index, self) => self.findIndex(d => d.doctorId === doctor.doctorId) === index
+        )
+        let uniqueMustExams = allTheMustExams.filter(
+          (exam, index, self) => self.findIndex(e => e.examId === exam.examId) === index
+        )
+        let uniqueAddonExams = allTheAddonExams.filter(
+          (exam, index, self) => self.findIndex(e => e.examId === exam.examId) === index
+        )
+        //* Добавляем вредности, врачей и осмотры в базу данных.
         Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/harms/`, {
-          medosHarms: this.currentMedos.medosHarms
+          medosHarms: this.currentMedos.medosHarms,
+          medosDoctors: {
+            mustDoctors: uniqueMustDoctors,
+            addonDoctors: uniqueAddonDoctors
+          },
+          medosExams: {
+            mustExams: uniqueMustExams,
+            addonExams: uniqueAddonExams
+          }
         }, {
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
         }).then(res => {
@@ -632,7 +697,9 @@
       openEditParametersDialog (item) {
         this.currentEditPatient = item
         this.currentMedos = item.activeMedos
-        this.currentPatientParameters = this.currentMedos.medosParameters
+        if (this.currentMedos.medosParameters) {
+          this.currentPatientParameters = this.currentMedos.medosParameters
+        }
         this.editParametersDialog.show = true
       },
       noEditParametersDialog () {
@@ -647,8 +714,9 @@
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
         }).then(res => {
           if (res.data.success) {
-            this.currentEditPatient = {}
+            this.currentEditPatient.activeMedos.medosParameters = this.currentPatientParameters
             this.currentMedos = {}
+            this.currentEditPatient = {}
             this.currentPatientParameters = {}
             this.editHarmsDialog.show = false
             this.snackBar.color = 'green darken-1 white--text'
@@ -670,10 +738,12 @@
         let tmpHarms = this.currentMedos.medosHarms
         let tmpParameters = this.currentMedos.medosParameters
         if (tmpHarms.length < 1) {
-          this.snackBar.color = 'red darken-2 white--text'
-          this.snackBar.timeout = 5000
-          this.snackBar.message = 'Не введены вредности'
-          this.snackBar.show = true
+          this.snackBar = {
+            color: 'red darken-2 white--text',
+            timeout: 5000,
+            message: 'Не введены вредности',
+            show: true
+          }
         } else if (
           tmpParameters.height === '' || tmpParameters.weight === '' || tmpParameters.pulse === '' ||
           tmpParameters.ad.sys === '' || tmpParameters.ad.dia === '' || tmpParameters.cigarettes === '' ||
@@ -683,53 +753,11 @@
           this.snackBar = {
             color: 'red darken-2 white--text',
             timeout: 5000,
-            message: 'Не введены вредности',
+            message: 'Не введены параметры',
             show: true
           }
         } else {
-          //* Инифициализируем пустые массивы для неотфильтрованных назначений по вредностям.
-          let allTheMustDoctors = []
-          let allTheAddonDoctors = []
-          let allTheMustExams = []
-          let allTheAddonExams = []
-          //* Просматриваем справочник вредностей и отбираем те, которые нам нужны.
-          tmpHarms.map((tmpHarm) => {
-            let tmpHarmDb = this.harms.find(harm => harm.harmId === tmpHarm.harmId)
-            tmpHarmDb.doctors.map((doctor) => {
-              doctor.mustDoctors.map((mustDoctor) => {
-                allTheMustDoctors.push(mustDoctor)
-              })
-              doctor.addonDoctors.map((addonDoctor) => {
-                allTheAddonDoctors.push(addonDoctor)
-              })
-            })
-            tmpHarmDb.exams.map((exam) => {
-              exam.mustExams.map((mustExam) => {
-                allTheMustExams.push(mustExam)
-              })
-              exam.addonExams.map((addonDoctor) => {
-                allTheAddonExams.push(addonDoctor)
-              })
-            })
-          })
-          //* Отбираем только уникальные назначения.
-          let uniqueMustDoctors = allTheMustDoctors.filter(
-            (doctor, index, self) => self.findIndex(d => d.doctorId === doctor.doctorId) === index
-          )
-          let uniqueAddonDoctors = allTheAddonDoctors.filter(
-            (doctor, index, self) => self.findIndex(d => d.doctorId === doctor.doctorId) === index
-          )
-          let uniqueMustExams = allTheMustExams.filter(
-            (exam, index, self) => self.findIndex(e => e.examId === exam.examId) === index
-          )
-          let uniqueAddonExams = allTheAddonExams.filter(
-            (exam, index, self) => self.findIndex(e => e.examId === exam.examId) === index
-          )
-          //* Кладем назначения в стор.
-          this.appointmentsForHarms.doctors.mustDoctors = uniqueMustDoctors
-          this.appointmentsForHarms.doctors.addonDoctors = uniqueAddonDoctors
-          this.appointmentsForHarms.exams.mustExams = uniqueMustExams
-          this.appointmentsForHarms.exams.addonExams = uniqueAddonExams
+          //* Нужно в самом диалоге сменить откуда берется.
           this.appointmentsDialog.show = true
         }
       },
@@ -835,12 +863,25 @@
 
         return dt + '.' + month + '.' + year
       },
+      //* Перевод даты в ISO формат.
+      dateToIso (input) {
+        //* Переводим дату из формата dd.mm.yyyy в yyyy-mm-dd.
+        const inputDate = input
+        const pattern = /(\d{2})\.(\d{2})\.(\d{4})/
+        return new Date(inputDate.replace(pattern, '$3-$2-$1'))
+      },
       //* Фильтруем массив только на уникальные элементы.
       uniqueArray (array) {
         let seen = {}
         return array.filter(function (item) {
           return seen.hasOwnProperty(item) ? false : (seen[item] = true)
         })
+      },
+      //* Сколько лет человеку.
+      calculateAge (birthday) { // birthday is a date
+        let ageDifMs = Date.now() - birthday.getTime()
+        let ageDate = new Date(ageDifMs) // miliseconds from epoch
+        return Math.abs(ageDate.getUTCFullYear() - 1970)
       },
       //* Вывод сообщения об ошибке.
       errorHandler (err) {

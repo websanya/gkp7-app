@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <app-header :subsystem="subSystem.primaryColor" subtitle="Лаборатория">
+  <div class=uwd-container>
+    <app-header :subsystem="subSystem.primaryColor" subtitle="Лаборатория" :currentUser="currentUser">
     </app-header>
     <v-content>
       <v-container fluid fill-height>
@@ -75,7 +75,7 @@
         </v-layout>
       </v-container>
     </v-content>
-    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser.fio">
+    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser">
     </app-footer>
 
     <v-snackbar :timeout="snackBar.timeout"
@@ -87,7 +87,7 @@
 
     <!-- Диалог списка анализов -->
     <v-dialog v-model="listAnalyzesDialog.show" persistent lazy max-width="800px">
-      <v-card v-if="listAnalyzesDialog.analyzeType === 'bloodClinical'">
+      <v-card v-if="listAnalyzesDialog.analyzeType === 'blood'">
         <v-card-title>
           <span class="headline">Анализы крови пациента <br/><span
               class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
@@ -106,7 +106,7 @@
           </v-layout>
         </v-card-title>
         <v-card-text>
-          <v-container grid-list-md v-if="currentEditPatient.bloodClinicalResults.length > 0">
+          <v-container grid-list-md v-if="currentEditPatient.bloodResults.length > 0">
             <v-data-table
                 :headers="[
                   { text: 'Дата анализа', value: 'bloodDate' },
@@ -115,7 +115,7 @@
                   { text: 'СОЭ', value: 'bloodResult.esr' },
                   { text: 'Действия', value: '' }
                 ]"
-                :items="currentEditPatient.bloodClinicalResults"
+                :items="currentEditPatient.bloodResults"
                 hide-actions
                 class="elevation-5 mt-4"
             >
@@ -239,7 +239,7 @@
 
     <!-- Диалог добавления анализа -->
     <v-dialog v-model="addAnalyzeDialog.show" persistent lazy max-width="800px">
-      <v-card v-if="listAnalyzesDialog.analyzeType === 'bloodClinical'">
+      <v-card v-if="listAnalyzesDialog.analyzeType === 'blood'">
         <v-card-title>
           <v-flex sm12>
             <span class="headline">
@@ -256,7 +256,7 @@
                     v-if="!addAnalyzeDialog.edit"
                     label="Дата анализа"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodDate"
+                    v-model="currentBloodResult.bloodDate"
                     mask="##.##.####"
                     return-masked-value
                 >
@@ -265,7 +265,7 @@
                     v-if="addAnalyzeDialog.edit"
                     label="Дата анализа"
                     :color="subSystem.primaryColor"
-                    :value="dateFromIso(currentBloodClinicalResult.bloodDate)"
+                    :value="dateFromIso(currentBloodResult.bloodDate)"
                     readonly
                     disabled
                 >
@@ -275,7 +275,7 @@
                 <v-text-field
                     label="Номер"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodNumber"
+                    v-model="currentBloodResult.bloodNumber"
                 >
                 </v-text-field>
               </v-flex>
@@ -293,7 +293,7 @@
                 <v-text-field
                     label="Гемоглобин"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.hemoglobin"
+                    v-model="currentBloodResult.bloodResult.hemoglobin"
                 >
                 </v-text-field>
               </v-flex>
@@ -301,7 +301,7 @@
                 <v-text-field
                     label="Лейкоциты"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.leucocytes"
+                    v-model="currentBloodResult.bloodResult.leucocytes"
                 >
                 </v-text-field>
               </v-flex>
@@ -309,7 +309,7 @@
                 <v-text-field
                     label="СОЭ"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.esr"
+                    v-model="currentBloodResult.bloodResult.esr"
                 >
                 </v-text-field>
               </v-flex>
@@ -319,7 +319,7 @@
                 <v-text-field
                     label="Базофилы"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.basophils"
+                    v-model="currentBloodResult.bloodResult.basophils"
                 >
                 </v-text-field>
               </v-flex>
@@ -327,7 +327,7 @@
                 <v-text-field
                     label="Эозинофилы"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.eosinophils"
+                    v-model="currentBloodResult.bloodResult.eosinophils"
                 >
                 </v-text-field>
               </v-flex>
@@ -335,7 +335,7 @@
                 <v-text-field
                     label="Бласты"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.blasts"
+                    v-model="currentBloodResult.bloodResult.blasts"
                 >
                 </v-text-field>
               </v-flex>
@@ -343,7 +343,7 @@
                 <v-text-field
                     label="Миелоциты"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.myelocytes"
+                    v-model="currentBloodResult.bloodResult.myelocytes"
                 >
                 </v-text-field>
               </v-flex>
@@ -351,7 +351,7 @@
                 <v-text-field
                     label="Юные"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.young"
+                    v-model="currentBloodResult.bloodResult.young"
                 >
                 </v-text-field>
               </v-flex>
@@ -359,7 +359,7 @@
                 <v-text-field
                     label="Палочки"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.sticks"
+                    v-model="currentBloodResult.bloodResult.sticks"
                 >
                 </v-text-field>
               </v-flex>
@@ -369,7 +369,7 @@
                 <v-text-field
                     label="Сегменты"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.segments"
+                    v-model="currentBloodResult.bloodResult.segments"
                 >
                 </v-text-field>
               </v-flex>
@@ -377,7 +377,7 @@
                 <v-text-field
                     label="Лимфоциты"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.lymphocytes"
+                    v-model="currentBloodResult.bloodResult.lymphocytes"
                 >
                 </v-text-field>
               </v-flex>
@@ -385,7 +385,7 @@
                 <v-text-field
                     label="Моноциты"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.monocytes"
+                    v-model="currentBloodResult.bloodResult.monocytes"
                 >
                 </v-text-field>
               </v-flex>
@@ -393,7 +393,7 @@
                 <v-text-field
                     label="Нормобласты"
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.normoblasts"
+                    v-model="currentBloodResult.bloodResult.normoblasts"
                 >
                 </v-text-field>
               </v-flex>
@@ -401,7 +401,46 @@
                 <v-text-field
                     label="Токсич. зерн. нейтроф."
                     :color="subSystem.primaryColor"
-                    v-model="currentBloodClinicalResult.bloodResult.sticks"
+                    v-model="currentBloodResult.bloodResult.tng"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12>
+                <h3>Биохимический анализ крови</h3>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12 md2>
+                <v-text-field
+                    label="Сахар"
+                    :color="subSystem.primaryColor"
+                    v-model="currentBloodResult.bloodResult.sugar"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                    label="Холистерин"
+                    :color="subSystem.primaryColor"
+                    v-model="currentBloodResult.bloodResult.cholesterol"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                    label="Протромбин"
+                    :color="subSystem.primaryColor"
+                    v-model="currentBloodResult.bloodResult.prothrombin"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                    label="МНО"
+                    :color="subSystem.primaryColor"
+                    v-model="currentBloodResult.bloodResult.inr"
                 >
                 </v-text-field>
               </v-flex>
@@ -697,7 +736,7 @@
     <!-- Диалог удаления анализа -->
     <v-dialog v-model="removeDialog.show" persistent max-width="800px">
       <v-card>
-        <v-card-title v-if="listAnalyzesDialog.analyzeType === 'bloodClinical'">
+        <v-card-title v-if="listAnalyzesDialog.analyzeType === 'blood'">
           <span class="headline">
             Удалить анализ крови от {{ currentRemoveItem.bloodDate | formatDate }} для<br/>
             <span class="red--text text--darken-2">«{{ currentEditPatient.fio }}»</span>?
@@ -738,11 +777,11 @@
         patients: [],
         //* Редактируемый пациент.
         currentEditPatient: {
-          bloodClinicalResults: [],
+          bloodResults: [],
           urineClinicalResults: []
         },
         //* Редактируемый клинический анализ крови.
-        currentBloodClinicalResult: {
+        currentBloodResult: {
           bloodDate: '',
           bloodNumber: '',
           bloodResult: {
@@ -980,57 +1019,57 @@
         urineSalts: [
           {
             value: {
-              saltType: 0,
-              saltName: 'нет'
+              saltsId: 0,
+              saltsName: 'нет'
             },
             text: '0 - нет'
           },
           {
             value: {
-              saltType: 1,
-              saltName: 'ураты'
+              saltsId: 1,
+              saltsName: 'ураты'
             },
             text: '1 - ураты'
           },
           {
             value: {
-              saltType: 2,
-              saltName: 'фосфаты'
+              saltsId: 2,
+              saltsName: 'фосфаты'
             },
             text: '2 - фосфаты'
           },
           {
             value: {
-              saltType: 3,
-              saltName: 'оксолаты'
+              saltsId: 3,
+              saltsName: 'оксолаты'
             },
             text: '3 - оксолаты'
           },
           {
             value: {
-              saltType: 4,
-              saltName: 'мочевой кислоты'
+              saltsId: 4,
+              saltsName: 'мочевой кислоты'
             },
             text: '4 - мочевой кислоты'
           },
           {
             value: {
-              saltType: 5,
-              saltName: 'трипельфосфаты'
+              saltsId: 5,
+              saltsName: 'трипельфосфаты'
             },
             text: '5 - трипельфосфаты'
           },
           {
             value: {
-              saltType: 6,
-              saltName: 'холестерин'
+              saltsId: 6,
+              saltsName: 'холестерин'
             },
             text: '6 - холестерин'
           },
           {
             value: {
-              saltType: 7,
-              saltName: 'билирубин'
+              saltsId: 7,
+              saltsName: 'билирубин'
             },
             text: '7 - билирубин'
           }
@@ -1071,12 +1110,12 @@
         this.currentEditPatient = item
         this.listAnalyzesDialog = {
           show: true,
-          analyzeType: 'bloodClinical'
+          analyzeType: 'blood'
         }
       },
       noBloodResultsListDialog () {
         this.currentEditPatient = {
-          bloodClinicalResults: [],
+          bloodResults: [],
           urineClinicalResults: []
         }
         this.listAnalyzesDialog = {
@@ -1094,7 +1133,7 @@
       },
       noUrineResultsListDialog () {
         this.currentEditPatient = {
-          bloodClinicalResults: [],
+          bloodResults: [],
           urineClinicalResults: []
         }
         this.listAnalyzesDialog = {
@@ -1107,8 +1146,8 @@
         let tmpAnalyzeType = this.listAnalyzesDialog.analyzeType
         if (obj.edit) {
           switch (tmpAnalyzeType) {
-            case 'bloodClinical':
-              this.currentBloodClinicalResult = obj.item
+            case 'blood':
+              this.currentBloodResult = obj.item
               break
             case 'urineClinical':
               this.currentUrineClinicalResult = obj.item
@@ -1123,8 +1162,8 @@
       noResultDialog () {
         let tmpAnalyzeType = this.listAnalyzesDialog.analyzeType
         switch (tmpAnalyzeType) {
-          case 'bloodClinical':
-            this.currentBloodClinicalResult = {
+          case 'blood':
+            this.currentBloodResult = {
               bloodDate: '',
               bloodNumber: '',
               bloodResult: {
@@ -1201,8 +1240,8 @@
         let tmpAnalyzeResult = {}
         let tmpAnalyzeType = this.listAnalyzesDialog.analyzeType
         switch (tmpAnalyzeType) {
-          case 'bloodClinical':
-            tmpAnalyzeResult = this.currentBloodClinicalResult
+          case 'blood':
+            tmpAnalyzeResult = this.currentBloodResult
             break
           case 'urineClinical':
             tmpAnalyzeResult = this.currentUrineClinicalResult
@@ -1220,12 +1259,12 @@
               if (res.data.success) {
                 let tmpResultAnalyze = {}
                 switch (tmpAnalyzeType) {
-                  case 'bloodClinical':
-                    tmpResultAnalyze = res.data.patient.bloodClinicalResults.find((item) => {
-                      return this.dateFromIso(item.bloodDate) === this.currentBloodClinicalResult.bloodDate
+                  case 'blood':
+                    tmpResultAnalyze = res.data.patient.bloodResults.find((item) => {
+                      return this.dateFromIso(item.bloodDate) === this.currentBloodResult.bloodDate
                     })
-                    this.currentEditPatient.bloodClinicalResults.push(tmpResultAnalyze)
-                    this.currentBloodClinicalResult = {
+                    this.currentEditPatient.bloodResults.push(tmpResultAnalyze)
+                    this.currentBloodResult = {
                       bloodDate: '',
                       bloodNumber: '',
                       bloodResult: {
@@ -1323,12 +1362,12 @@
               if (res.data.success) {
                 let tmpResultAnalyze = {}
                 switch (tmpAnalyzeType) {
-                  case 'bloodClinical':
-                    tmpResultAnalyze = res.data.patient.bloodClinicalResults.find((item) => {
-                      return this.dateFromIso(item.bloodDate) === this.currentBloodClinicalResult.bloodDate
+                  case 'blood':
+                    tmpResultAnalyze = res.data.patient.bloodResults.find((item) => {
+                      return this.dateFromIso(item.bloodDate) === this.currentBloodResult.bloodDate
                     })
-                    this.currentEditPatient.bloodClinicalResults.push(tmpResultAnalyze)
-                    this.currentBloodClinicalResult = {
+                    this.currentEditPatient.bloodResults.push(tmpResultAnalyze)
+                    this.currentBloodResult = {
                       bloodDate: '',
                       bloodNumber: '',
                       bloodResult: {
@@ -1440,8 +1479,8 @@
           }
         }).then(res => {
           if (res.data.success) {
-            if (tmpType === 'bloodClinical') {
-              this.currentEditPatient.bloodClinicalResults = this.currentEditPatient.bloodClinicalResults.filter(
+            if (tmpType === 'blood') {
+              this.currentEditPatient.bloodResults = this.currentEditPatient.bloodResults.filter(
                 result => result._id !== this.currentRemoveItem._id
               )
             } else if (tmpType === 'urineClinical') {

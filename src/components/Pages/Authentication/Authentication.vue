@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class=uwd-container>
     <v-content>
       <v-container fluid fill-height>
         <v-layout align-center justify-center>

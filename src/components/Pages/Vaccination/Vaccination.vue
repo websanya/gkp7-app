@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <app-header :subsystem="subSystem.primaryColor" subtitle="Прививки">
+  <div class=uwd-container>
+    <app-header :subsystem="subSystem.primaryColor" subtitle="Прививки" :currentUser="currentUser">
     </app-header>
     <v-content>
       <v-container fluid fill-height>
@@ -8,8 +8,8 @@
             justify-center
             align-center
         >
-          <v-flex xs12 md10>
-            <h2 class="text-xs-center">Введите имя пациента</h2>
+          <v-flex xs12>
+            <h2 class="text-xs-center">Поиск пациентов</h2>
             <v-container grid-list-md>
               <v-layout row wrap>
                 <v-flex xs12 md4>
@@ -63,7 +63,7 @@
         </v-layout>
       </v-container>
     </v-content>
-    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser.fio">
+    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser">
     </app-footer>
 
     <v-snackbar :timeout="snackBar.timeout"
@@ -71,9 +71,6 @@
                 :color="snackBar.color"
                 v-model="snackBar.show">
       {{ snackBar.message }}
-      <v-btn flat icon @click.native="snackBar.show = false">
-        <v-icon>clear</v-icon>
-      </v-btn>
     </v-snackbar>
 
     <v-dialog v-model="showAddDialog" persistent max-width="800px">

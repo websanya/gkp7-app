@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <app-header :subsystem="subSystem.primaryColor" subtitle="Регистратура профосмотра">
+  <div class=uwd-container>
+    <app-header :subsystem="subSystem.primaryColor" subtitle="Регистратура профосмотра" :currentUser="currentUser">
     </app-header>
     <v-content>
       <v-container fluid fill-height>
@@ -99,7 +99,7 @@
         </v-layout>
       </v-container>
     </v-content>
-    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser.fio">
+    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser">
     </app-footer>
 
     <v-snackbar :timeout="snackBar.timeout"
@@ -708,7 +708,11 @@
         this.addJobDialog.show = false
         let tempJob = this.currentAddJob
         tempJob.updatedBy = this.currentUser._id
-        this.currentAddPatient.activeJob = tempJob
+        if (this.addPatientDialog.show) {
+          this.currentAddPatient.activeJob = tempJob
+        } else if (this.editPatientDialog.show) {
+          this.currentEditPatient.activeJob = tempJob
+        }
       },
       //* Методы для диалога редактирования пациента.
       openEditPatientDialog (item) {

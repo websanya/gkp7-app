@@ -1,11 +1,9 @@
 <template>
-  <div>
-
+  <div class=uwd-container>
     <!-- Верхняя рамка приложения + боковое меню -->
     <app-header :subsystem="subSystem.primaryColor" subtitle="Редактор предприятий">
     </app-header>
     <!-- / Верхняя рамка приложения + боковое меню -->
-
     <!-- Контент (заголовок + таблица) -->
     <v-content>
       <v-container fluid fill-height>
@@ -13,7 +11,7 @@
             justify-center
             align-center
         >
-          <v-flex xs12 md10>
+          <v-flex xs12>
             <h2 class="text-xs-center">Редактор предприятий</h2>
             <v-container grid-list-md>
 
