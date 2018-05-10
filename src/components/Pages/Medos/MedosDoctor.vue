@@ -1,13 +1,13 @@
 <template>
-  <div class=uwd-container>
+  <div class="uwd-container">
     <app-header :subsystem="subSystem.primaryColor" :subtitle="`Рабочее место ${currentUserDoctor.name}а`"
                 :currentUser="currentUser">
     </app-header>
     <v-content>
       <v-container fluid fill-height>
         <v-layout
-            justify-center
-            align-center
+          justify-center
+          align-center
         >
           <v-flex xs12>
             <h2 class="text-xs-center">Пациенты на мед. осмотре</h2>
@@ -33,17 +33,17 @@
                 </v-flex>
               </v-layout>
               <v-data-table
-                  :headers="[
+                :headers="[
                     {text:'ФИО', sortable: false},
                     {text:'Осмотр', sortable: false},
                     {text: 'Дата рождения', sortable: false},
                     {text: 'Пол', sortable: false},
                     {text: 'Действия', sortable: false}
                   ]"
-                  v-if="patients.length > 0"
-                  :items="patients"
-                  hide-actions
-                  class="elevation-10 mt-4"
+                v-if="patients.length > 0"
+                :items="patients"
+                hide-actions
+                class="elevation-10 mt-4"
               >
                 <template slot="items" slot-scope="props">
                   <tr>
@@ -54,10 +54,10 @@
                     <td>
                       <v-tooltip top :color="subSystem.primaryColor">
                         <v-btn
-                            slot="activator"
-                            @click.native="openExaminationDialog(props.item)"
-                            :color="subSystem.primaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openExaminationDialog(props.item)"
+                          :color="subSystem.primaryColor"
+                          icon
                         >
                           <v-icon color="white">assignment_turned_in</v-icon>
                         </v-btn>
@@ -83,13 +83,14 @@
     </v-snackbar>
 
     <!-- Диалог приема врача -->
-    <v-dialog v-model="makeAppointmentDialog.show" persistent max-width="900px">
+    <v-dialog v-if="currentEditPatient.activeMedos.medosDoctors" v-model="makeAppointmentDialog.show" persistent
+              max-width="900px">
       <v-card>
         <v-card-title row wrap>
           <v-flex sm6>
             <span class="headline">Прием врача-{{ currentUserDoctor.name }}а для пациента<br/><span
-                class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
-          </span>
+              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+            </span>
           </v-flex>
           <v-flex sm6>
             <v-container grid-list-md>
@@ -154,26 +155,39 @@
                   </v-btn>
                 </v-flex>
               </v-layout>
+              <!-- / Специально для офтальмологов -->
+              <!-- Специально для дерматовенерологов -->
+              <v-layout row wrap v-if="this.currentUser.roles.medos.doctor === 3">
+                <v-flex sm12>
+                  <v-btn @click.native="makeAppointmentDialog.showRw = !makeAppointmentDialog.showRw"
+                         color="blue-grey darken-4"
+                         dark block>
+                    RW и Мазок
+                  </v-btn>
+                </v-flex>
+              </v-layout>
+              <!-- / Специально для дерматовенерологов -->
+              <!-- Специально для терапевтов -->
+              <v-layout row wrap
+                        v-if="this.currentUser.roles.medos.doctor === 1 || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser">
+                <v-flex sm12 md4>
+                  <v-btn @click.native="openConclusionsDialog()"
+                         :color="(ifAllDoctorsComplete() && ifAllExamsComplete) ? 'green darken-2' : 'light-blue darken-4'"
+                         dark block>
+                    Годности
+                  </v-btn>
+                </v-flex>
+              </v-layout>
+              <!-- / Специально для терапевтов -->
             </v-container>
-            <!-- / Специально для офтальмологов -->
-            <!-- Специально для дерматовенерологов -->
-            <v-layout row wrap v-if="this.currentUser.roles.medos.doctor === 3">
-              <v-flex sm12>
-                <v-btn @click.native="makeAppointmentDialog.showRw = !makeAppointmentDialog.showRw"
-                       color="blue-grey darken-4"
-                       dark block>
-                  RW и Мазок
-                </v-btn>
-              </v-flex>
-            </v-layout>
-            <!-- / Специально для дерматовенерологов -->
           </v-flex>
         </v-card-title>
         <v-card-text>
           <p v-if="currentEditPatient.activeMedos">
             <strong>Дата регистрации:</strong> {{ currentEditPatient.activeMedos.medosRegistrationDate | formatDate }}
           </p>
-          <p v-if="currentEditPatient.activeMedos.medosJob && currentEditPatient.activeMedos.medosParameters && sortedRgResult && makeAppointmentDialog.showInfo">
+          <p
+            v-if="currentEditPatient.activeMedos.medosJob && currentEditPatient.activeMedos.medosParameters && makeAppointmentDialog.showInfo">
             <strong>Цех:</strong> {{ currentEditPatient.activeMedos.medosJob.jobDivision.jobDivisionName }},
             <strong>табельный номер:</strong> {{ currentEditPatient.activeMedos.medosJob.jobPersonnelNumber }}<br/>
             <strong>Участок:</strong> {{ currentEditPatient.activeMedos.medosJob.jobDepartment.jobDepartmentName }},
@@ -188,6 +202,9 @@
             <span v-if="sortedRgResult">
               <strong>Флюорография:</strong> {{ sortedRgResult.rgDate | formatDate }}, {{
             sortedRgResult.rgLocation.rgLocationComment }}
+            </span>
+            <span v-if="!sortedRgResult">
+              <strong>Флюорография: <span class="red--text">отсутствует</span></strong>
             </span>
           </p>
           <p v-if="makeAppointmentDialog.showInfo">
@@ -246,41 +263,41 @@
             <v-layout row wrap v-if="currentUserDoctor.id === 4">
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Без кор. OD"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.noCorrection.od"
+                  label="Без кор. OD"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.noCorrection.od"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="OD SPH"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.correction.od.sph"
+                  label="OD SPH"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.correction.od.sph"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="OD CYL"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.correction.od.cyl"
+                  label="OD CYL"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.correction.od.cyl"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="OD AX"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.correction.od.ax"
+                  label="OD AX"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.correction.od.ax"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="С кор. OD"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.withCorrection.od"
+                  label="С кор. OD"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.withCorrection.od"
                 >
                 </v-text-field>
               </v-flex>
@@ -288,41 +305,41 @@
             <v-layout row wrap v-if="currentUserDoctor.id === 4">
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Без кор. OS"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.noCorrection.os"
+                  label="Без кор. OS"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.noCorrection.os"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="OS SPH"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.correction.os.sph"
+                  label="OS SPH"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.correction.os.sph"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="OS CYL"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.correction.os.cyl"
+                  label="OS CYL"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.correction.os.cyl"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="OS AX"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.correction.os.ax"
+                  label="OS AX"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.correction.os.ax"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="С кор. OS"
-                    :color="subSystem.primaryColor"
-                    v-model="currentOphthalmologistResult.withCorrection.os"
+                  label="С кор. OS"
+                  :color="subSystem.primaryColor"
+                  v-model="currentOphthalmologistResult.withCorrection.os"
                 >
                 </v-text-field>
               </v-flex>
@@ -335,12 +352,12 @@
             <v-layout row wrap>
               <v-flex sm12>
                 <v-text-field
-                    multi-line
-                    rows="3"
-                    auto-grow
-                    label="Объект. статус"
-                    :color="subSystem.primaryColor"
-                    v-model="currentDoctorResult.doctorStatus"
+                  multi-line
+                  rows="3"
+                  auto-grow
+                  label="Объект. статус"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorStatus"
                 >
                 </v-text-field>
               </v-flex>
@@ -348,35 +365,35 @@
             <v-layout row wrap>
               <v-flex sm12 md2>
                 <v-text-field
-                    auto-grow
-                    label="Жалобы"
-                    :color="subSystem.primaryColor"
-                    v-model="currentDoctorResult.doctorComplaints"
+                  auto-grow
+                  label="Жалобы"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorComplaints"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="Диагноз"
-                    :color="subSystem.primaryColor"
-                    v-model="currentDoctorResult.doctorDiagnosis.diagnosis"
+                  label="Диагноз"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorDiagnosis.diagnosis"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-select
-                    :items="doctorDetectabilities"
-                    label="Выявляен"
-                    :color="subSystem.primaryColor"
-                    v-model="currentDoctorResult.doctorDiagnosis.detectability"
+                  :items="doctorDetectabilities"
+                  label="Выявляен"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorDiagnosis.detectability"
                 >
                 </v-select>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="Комментарий"
-                    :color="subSystem.primaryColor"
-                    v-model="currentDoctorResult.doctorDiagnosis.diagnosisComment"
+                  label="Комментарий"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorDiagnosis.diagnosisComment"
                 >
                 </v-text-field>
               </v-flex>
@@ -384,12 +401,12 @@
             <v-layout row wrap>
               <v-flex sm12>
                 <v-select
-                    auto-grow
-                    multiple
-                    :items="doctorConclusions"
-                    label="Годность"
-                    :color="subSystem.primaryColor"
-                    v-model="currentDoctorResult.doctorConclusion"
+                  auto-grow
+                  multiple
+                  :items="doctorConclusions"
+                  label="Годность"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorConclusion"
                 >
                 </v-select>
               </v-flex>
@@ -401,7 +418,21 @@
           </v-spacer>
           <v-btn :color="subSystem.primaryColor" flat class="white--text" @click.native="noExaminationDialog">Закрыть
           </v-btn>
-          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="yesExaminationDialog">Сохранить
+          <v-btn
+            v-if="this.currentUser.roles.medos.doctor !== 1 && !this.currentUser.roles.medos.admin && !this.currentUser.roles.superuser"
+            :color="subSystem.primaryColor" class="white--text" @click.native="yesExaminationDialog">Сохранить
+          </v-btn>
+          <v-btn
+            v-if="this.currentUser.roles.medos.doctor === 1 || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser"
+            :color="subSystem.primaryColor" class="white--text" @click.native="yesExaminationDialog"
+            :disabled="!(ifAllDoctorsComplete() && ifAllExamsComplete())"
+          >Сохранить прием
+          </v-btn>
+          <v-btn
+            v-if="this.currentUser.roles.medos.doctor === 1 || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser"
+            :color="subSystem.secondaryColor" class="white--text" @click.native="closeMedosDialog"
+            :disabled="!(ifAllDoctorsComplete() && ifAllExamsComplete())"
+          >Закрыть медосмотр
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -419,12 +450,12 @@
             <v-layout row wrap>
               <v-flex sm12>
                 <v-text-field
-                    auto-grow
-                    multi-line
-                    rows="3"
-                    label="Результат"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult"
+                  auto-grow
+                  multi-line
+                  rows="3"
+                  label="Результат"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult"
                 ></v-text-field>
               </v-flex>
             </v-layout>
@@ -453,18 +484,18 @@
             <v-layout row wrap>
               <v-flex sm12 md6>
                 <v-select
-                    :items="fieldResults"
-                    label="Результат OD"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.od"
+                  :items="fieldResults"
+                  label="Результат OD"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.od"
                 ></v-select>
               </v-flex>
               <v-flex sm12 md6>
                 <v-select
-                    :items="fieldResults"
-                    label="Результат OS"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.os"
+                  :items="fieldResults"
+                  label="Результат OS"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.os"
                 ></v-select>
               </v-flex>
             </v-layout>
@@ -494,16 +525,16 @@
             <v-layout row wrap>
               <v-flex sm12 md6>
                 <v-text-field
-                    label="OD, мм рт ст"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.od"
+                  label="OD, мм рт ст"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.od"
                 ></v-text-field>
               </v-flex>
               <v-flex sm12 md6>
                 <v-text-field
-                    label="OS, мм рт ст"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.os"
+                  label="OS, мм рт ст"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.os"
                 ></v-text-field>
               </v-flex>
             </v-layout>
@@ -534,25 +565,25 @@
             <v-layout row wrap v-if="currentExamResult.examResult.od">
               <v-flex sm12 md4>
                 <v-text-field
-                    label="OD SPH"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.od.sph"
+                  label="OD SPH"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.od.sph"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="OD CYL"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.od.cyl"
+                  label="OD CYL"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.od.cyl"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="OD AX"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.od.ax"
+                  label="OD AX"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.od.ax"
                 >
                 </v-text-field>
               </v-flex>
@@ -560,25 +591,25 @@
             <v-layout row wrap v-if="currentExamResult.examResult.os">
               <v-flex sm12 md4>
                 <v-text-field
-                    label="OS SPH"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.os.sph"
+                  label="OS SPH"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.os.sph"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="OS CYL"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.os.cyl"
+                  label="OS CYL"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.os.cyl"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="OS AX"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult.os.ax"
+                  label="OS AX"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.os.ax"
                 >
                 </v-text-field>
               </v-flex>
@@ -610,10 +641,10 @@
             <v-layout row wrap>
               <v-flex sm12>
                 <v-select
-                    :items="colorBlindnessResults"
-                    label="Цветощущение"
-                    :color="subSystem.primaryColor"
-                    v-model="currentExamResult.examResult"
+                  :items="colorBlindnessResults"
+                  label="Цветощущение"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult"
                 ></v-select>
               </v-flex>
             </v-layout>
@@ -630,6 +661,115 @@
       </v-card>
     </v-dialog>
     <!-- / Диалог на цветоощущение -->
+
+    <!-- Диалог годностей и результатов -->
+    <v-dialog v-model="conclusionsDialog.show" persistent max-width="900px">
+      <v-card style="background: #eaeaea">
+        <v-card-title>
+          <span class="headline">Результаты пациента<br/><span
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+          </span>
+        </v-card-title>
+        <v-card-text>
+          <v-container grid-list-md v-if="this.currentEditPatient.activeMedos.medosDoctors">
+            <h2 style="margin-bottom: 10px" :class="(ifAllDoctorsComplete()) ? 'green--text' : 'red--text'">Доктора</h2>
+            <v-expansion-panel focusable>
+              <v-expansion-panel-content
+                v-for="doctor in currentEditPatient.activeMedos.medosDoctors.mustDoctors"
+                :key="doctor.doctorId"
+                v-if="doctor.doctorId !== 1"
+              >
+                <div slot="header"
+                     v-if="ifDoctorHasResult(doctor.doctorId)">
+                  <strong>{{ getDoctorName(doctor.doctorId) }}</strong> — {{
+                  getDoctorResult(doctor.doctorId).doctorConclusion.toString() }}
+                </div>
+                <div slot="header"
+                     v-if="!ifDoctorHasResult(doctor.doctorId)">
+                  <strong>{{ getDoctorName(doctor.doctorId) }}</strong> — <strong class="red--text">Нет
+                  заключения</strong>
+                </div>
+                <v-card v-if="ifDoctorHasResult(doctor.doctorId)">
+                  <v-card-text style="padding: 10px 24px">
+                    <p>
+                      <strong>Жалобы:</strong> {{ getDoctorResult(doctor.doctorId).doctorComplaints }}
+                    </p>
+                    <p>
+                      <strong>Объективный статус:</strong> {{ getDoctorResult(doctor.doctorId).doctorStatus }}
+                    </p>
+                    <p v-if="getDoctorResult(doctor.doctorId).doctorDiagnosis">
+                      <strong>Диагноз:</strong> {{ getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosis }}
+                      <strong v-if="getDoctorResult(doctor.doctorId).doctorDiagnosis.detectability !== undefined">
+                        ({{ (getDoctorResult(doctor.doctorId).doctorDiagnosis.detectability === true) ? '+' : '-'
+                        }})
+                      </strong>
+                      <em v-if="getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosisComment !== ''">— {{
+                        getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosisComment }}</em>
+                    </p>
+                    <p v-if="getDoctorResult(doctor.doctorId).doctorSpecial"></p>
+                    <p>
+                      <strong>Годность:</strong> {{ getDoctorResult(doctor.doctorId).doctorConclusion.toString() }}
+                    </p>
+                  </v-card-text>
+                </v-card>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-container>
+          <br>
+          <v-container grid-list-md v-if="this.currentEditPatient.activeMedos.medosExams && ifAnyExamNeeded()">
+            <h2 style="margin: 10px 0" :class="(ifAllExamsComplete()) ? 'green--text' : 'red--text'">Обследования</h2>
+            <v-expansion-panel focusable>
+              <v-expansion-panel-content
+                v-for="exam in currentEditPatient.activeMedos.medosExams.mustExams"
+                :key="exam.examId"
+                v-if="examsForConclusions.includes(exam.examId)"
+              >
+                <div slot="header"
+                     v-if="ifExamHasResult(exam.examId)">
+                  <strong>{{ exam.examName }}</strong>
+                </div>
+                <div slot="header"
+                     v-if="!ifExamHasResult(exam.examId)">
+                  <strong>{{ exam.examName }}</strong> — <strong class="red--text">Нет
+                  заключения</strong>
+                </div>
+                <v-card v-if="ifExamHasResult(exam.examId)">
+                  <v-card-text style="padding: 10px 24px">
+                    <span v-if="exam.examId === 19">
+                      {{ getExamResult(exam.examId).examResult }}
+                    </span>
+                    <p v-if="exam.examId === 20">
+                      <strong>OD:</strong> {{ fieldResults.find(result => result.value ===
+                      getExamResult(exam.examId).examResult.od).text }}<br>
+                      <strong>OS:</strong> {{ fieldResults.find(result => result.value ===
+                      getExamResult(exam.examId).examResult.os).text }}
+                    </p>
+                    <span v-if="exam.examId === 21">
+                      <strong>OD:</strong> {{ getExamResult(exam.examId).examResult.od }} мм рт.ст.<br>
+                      <strong>OS:</strong> {{ getExamResult(exam.examId).examResult.os }} мм рт.ст.
+                    </span>
+                    <span v-if="exam.examId === 32">
+                      <strong>OD:</strong> SPH: {{ getExamResult(exam.examId).examResult.od.sph }} CYL: {{ getExamResult(exam.examId).examResult.od.cyl }} AX: {{ getExamResult(exam.examId).examResult.od.ax }}<br>
+                      <strong>OS:</strong> SPH: {{ getExamResult(exam.examId).examResult.os.sph }} CYL: {{ getExamResult(exam.examId).examResult.os.cyl }} AX: {{ getExamResult(exam.examId).examResult.os.ax }}
+                    </span>
+                    <span v-if="exam.examId === 34">
+                      <strong>AD:</strong> <em>125:</em> {{ getExamResult(exam.examId).examResult.ad.f125 }} <em>250:</em> {{ getExamResult(exam.examId).examResult.ad.f250 }} <em>500:</em> {{ getExamResult(exam.examId).examResult.ad.f500 }} <em>1000:</em> {{ getExamResult(exam.examId).examResult.ad.f1000 }} <em>2000:</em> {{ getExamResult(exam.examId).examResult.ad.f2000 }} <em>4000:</em> {{ getExamResult(exam.examId).examResult.ad.f4000 }} <em>6000:</em> {{ getExamResult(exam.examId).examResult.ad.f6000 }}<br>
+                      <strong>AS:</strong> <em>125:</em> {{ getExamResult(exam.examId).examResult.as.f125 }} <em>250:</em> {{ getExamResult(exam.examId).examResult.as.f250 }} <em>500:</em> {{ getExamResult(exam.examId).examResult.as.f500 }} <em>1000:</em> {{ getExamResult(exam.examId).examResult.as.f1000 }} <em>2000:</em> {{ getExamResult(exam.examId).examResult.as.f2000 }} <em>4000:</em> {{ getExamResult(exam.examId).examResult.as.f4000 }} <em>6000:</em> {{ getExamResult(exam.examId).examResult.as.f6000 }}
+                    </span>
+                  </v-card-text>
+                </v-card>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn :color="subSystem.primaryColor" flat @click.native="noConclusionsDialog()">Закрыть</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- / Диалог годностей и результатов -->
 
   </div>
 </template>
@@ -690,7 +830,7 @@
         currentDoctorResult: {
           doctorDiagnosis: {}
         },
-        //* Обследование, которое редактируем.
+        //* Обследование, которое будем вносить (в основном для офтальмолога).
         currentExamResult: {},
         //* Показания специфические для офтальмолога.
         currentOphthalmologistResult: {
@@ -729,13 +869,21 @@
           showInfo: false,
           edit: false
         },
-        //* Диалоги обследований.
+        //* Диалоги обследований (открываются кнопками у офтальмолога).
         examsDialog: {
           ocularFundus: false,
           intraocularPressure: false,
           refractometry: false,
           fields: false,
           colorBlindness: false
+        },
+        //* Диалог годностей узких специалистов (открывается у терапевта).
+        conclusionsDialog: {
+          show: false
+        },
+        //* Диалог архивации мед. осмотра.
+        archiveMedosDialog: {
+          show: false
         },
         //* Обследования офтальмолога.
         ophthalmologistExams: {
@@ -745,6 +893,8 @@
           fields: false,
           colorBlindness: false
         },
+        //* Массив обследований, которые выводят в годности.
+        examsForConclusions: [1, 19, 20, 21, 32, 34, 38, 46],
         //* Словарь годностей.
         doctorConclusions: [
           'Годен',
@@ -804,7 +954,7 @@
             text: 'Трихромазия'
           }
         ],
-        //* Все, что связано с snackbar, который всплывает во время ошибок.
+        //* Все, что связано с snackBar, который всплывает во время ошибок.
         snackBar: {
           show: false,
           message: '',
@@ -827,6 +977,7 @@
       //* Методы про диалог приема врача.
       openExaminationDialog (item) {
         this.currentEditPatient = item
+        //* Проверяем открывать ли вообще диалог, вдруг отсутствуют посещения доврачебного или анализы.
         if (!this.currentEditPatient.activeMedos.medosDoctors) {
           this.snackBar = {
             color: 'red darken-2 white--text',
@@ -849,7 +1000,6 @@
             show: true
           }
         } else {
-          //* Ссылка на id доктора.
           //* Выбираем последние анализы и последнюю флюорографию.
           let sortedBlood = this.currentEditPatient.bloodResults.sort((a, b) => {
             return new Date(b.bloodDate) - new Date(a.bloodDate)
@@ -863,17 +1013,10 @@
             return new Date(b.rgDate) - new Date(a.rgDate)
           })
           this.sortedRgResult = sortedRg[0]
-          //* Выбираем есть ли офтальмологические обследования.
-          let mustExams = this.currentEditPatient.activeMedos.medosExams.mustExams
-          this.ophthalmologistExams.ocularFundus = mustExams.some(exam => exam.examId === 19)
-          this.ophthalmologistExams.fields = mustExams.some(exam => exam.examId === 20)
-          this.ophthalmologistExams.intraocularPressure = mustExams.some(exam => exam.examId === 21)
-          this.ophthalmologistExams.refractometry = mustExams.some(exam => exam.examId === 32)
-          this.ophthalmologistExams.colorBlindness = mustExams.some(exam => exam.examId === 38)
           //* Проверяем нужен ли осмотр такого доктора.
           let mustDoctors = this.currentEditPatient.activeMedos.medosDoctors.mustDoctors
           let thisDoctor = mustDoctors.some(doctor => doctor.doctorId === this.currentUserDoctor.id)
-          if (thisDoctor) {
+          if (thisDoctor || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser) {
             //* Проверяем есть ли уже осмотр такого доктора, тогда редактируем.
             let hasDoctorResult = this.currentEditPatient.activeMedos.medosDoctorResults.some(
               result => result.doctorId === this.currentUserDoctor.id
@@ -889,6 +1032,18 @@
               this.currentDoctorResult = this.currentEditPatient.activeMedos.medosDoctorResults.find(
                 result => result.doctorId === this.currentUserDoctor.id
               )
+              //* Если пустой диагноз, то сделать.
+              if (!this.currentDoctorResult.doctorDiagnosis) {
+                this.currentDoctorResult.doctorDiagnosis = {
+                  diagnosis: '',
+                  detectability: null,
+                  diagnosisComment: ''
+                }
+              }
+              //* Если офтальмолог.
+              if (this.currentDoctorResult.doctorSpecial && this.currentUserDoctor.id === 4) {
+                this.currentOphthalmologistResult = this.currentDoctorResult.doctorSpecial
+              }
             } else {
               this.makeAppointmentDialog = {
                 show: true,
@@ -905,6 +1060,15 @@
               message: 'Этому пациенту не требуется осмотр',
               show: true
             }
+          }
+          if (this.currentUserDoctor.id === 4) {
+            //* Выбираем есть ли офтальмологические обследования.
+            let mustExams = this.currentEditPatient.activeMedos.medosExams.mustExams
+            this.ophthalmologistExams.ocularFundus = mustExams.some(exam => exam.examId === 19)
+            this.ophthalmologistExams.fields = mustExams.some(exam => exam.examId === 20)
+            this.ophthalmologistExams.intraocularPressure = mustExams.some(exam => exam.examId === 21)
+            this.ophthalmologistExams.refractometry = mustExams.some(exam => exam.examId === 32)
+            this.ophthalmologistExams.colorBlindness = mustExams.some(exam => exam.examId === 38)
           }
         }
       },
@@ -929,7 +1093,7 @@
           tmpDoctorResult.doctorSpecial = this.currentOphthalmologistResult
         }
         if (this.makeAppointmentDialog.edit) {
-          if (this.currentUserDoctor.id !== 1 && this.currentUserDoctor.id !== 0) {
+          if (this.currentUserDoctor.id !== 0) {
             Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/doctorResult/${tmpDoctorResult._id}/`, {
               doctorResult: tmpDoctorResult
             }, {
@@ -966,13 +1130,13 @@
             this.snackBar = {
               color: 'red darken-2 white--text',
               timeout: 5000,
-              message: 'Терапевт',
+              message: 'Вы не врач',
               show: true
             }
           }
         } else {
           tmpDoctorResult.doctorId = this.currentUserDoctor.id
-          if (this.currentUserDoctor.id !== 1 && this.currentUserDoctor.id !== 0) {
+          if (this.currentUserDoctor.id !== 0) {
             Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/doctorResult/`, {
               doctorResult: tmpDoctorResult
             }, {
@@ -1009,7 +1173,7 @@
             this.snackBar = {
               color: 'red darken-2 white--text',
               timeout: 5000,
-              message: 'Терапевт',
+              message: 'Вы не врач',
               show: true
             }
           }
@@ -1077,6 +1241,11 @@
           }
         })
       },
+      //* Закрыть мед. осмотр.
+      openArchiveMedosDialog () {
+      },
+      noArchiveMedosDialog () {},
+      yesArchiveMedosDialog () {},
       //* Методы про диалог осбледования.
       openExamDialog (item) {
         let activeExamResults = this.currentEditPatient.activeMedos.medosExamResults
@@ -1188,6 +1357,13 @@
         }
         this.examsDialog[item] = false
       },
+      //* Методы про диалог годностей других специалистов.
+      openConclusionsDialog () {
+        this.conclusionsDialog.show = true
+      },
+      noConclusionsDialog () {
+        this.conclusionsDialog.show = false
+      },
       //* Запрашиваем список пациентов по введенным ФИО.
       getMedosPatients () {
         let tempQuery = {}
@@ -1221,7 +1397,11 @@
         }).then(({data}) => {
           this.currentUser = data
           this.currentDoctorResult.doctorComplaints = 'Нет'
-          this.currentUserDoctor.id = this.currentUser.roles.medos.doctor
+          if (this.currentUser.roles.medos.admin || this.currentUser.roles.superuser) {
+            this.currentUserDoctor.id = 1
+          } else {
+            this.currentUserDoctor.id = this.currentUser.roles.medos.doctor
+          }
           switch (this.currentUser.roles.medos.doctor) {
             case 1:
               this.currentUserDoctor.name = 'терапевт'
@@ -1263,6 +1443,85 @@
         }).catch(err => {
           this.errorHandler(err)
         })
+      },
+      //* Название доктора по id.
+      getDoctorName (doctorId) {
+        switch (doctorId) {
+          case 1:
+            return 'Терапевт'
+          case 2:
+            return 'Оториноалринголог'
+          case 3:
+            return 'Дерматовенеролог'
+          case 4:
+            return 'Офтальмолог'
+          case 5:
+            return 'Хирург'
+          case 6:
+            return 'Невролог'
+          case 7:
+            return 'Стоматолог'
+          case 12:
+            return 'Гинеколог'
+        }
+      },
+      //* Есть ли результат такого доктора.
+      ifDoctorHasResult (doctorId) {
+        return this.currentEditPatient.activeMedos.medosDoctorResults.some(result => result.doctorId === doctorId)
+      },
+      //* Результат такого доктора.
+      getDoctorResult (doctorId) {
+        return this.currentEditPatient.activeMedos.medosDoctorResults.find(result => result.doctorId === doctorId)
+      },
+      //* Название обследования по id.
+      getExamName (examId) {
+        switch (examId) {
+          case 1:
+            return 'Спирометрия'
+          case 19:
+            return 'Глазное дно'
+          case 20:
+            return 'Поля зрения'
+          case 21:
+            return 'Глазное давление'
+          case 32:
+            return 'Рефрактометрия'
+          case 34:
+            return 'Аудиометрия'
+          case 38:
+            return 'Цветоощущение'
+          case 46:
+            return 'ЭКГ'
+        }
+      },
+      //* Есть ли результат такого обследования.
+      ifExamHasResult (examId) {
+        return this.currentEditPatient.activeMedos.medosExamResults.some(result => result.examId === examId)
+      },
+      //* Результат такого обследования.
+      getExamResult (examId) {
+        return this.currentEditPatient.activeMedos.medosExamResults.find(result => result.examId === examId)
+      },
+      //* Проверить есть ли хоть одно обследование, которое требует описания.
+      ifAnyExamNeeded () {
+        let examsForConclusions = this.examsForConclusions
+        let mustExams = this.currentEditPatient.activeMedos.medosExams.mustExams
+        return mustExams.some(exam => examsForConclusions.includes(exam.examId))
+      },
+      //* Проверить все ли обследования пройдены.
+      ifAllExamsComplete () {
+        let examsForConclusions = this.examsForConclusions
+        let mustExams = this.currentEditPatient.activeMedos.medosExams.mustExams
+        let finalExamsToCheck = mustExams.filter(exam => examsForConclusions.includes(exam.examId))
+        let examResults = this.currentEditPatient.activeMedos.medosExamResults
+        return finalExamsToCheck.every(exam => examResults.some(result => result.examId === exam.examId))
+      },
+      //* Проверить все ли врачи пройдены.
+      ifAllDoctorsComplete () {
+        let mustDoctors = this.currentEditPatient.activeMedos.medosDoctors.mustDoctors
+        let finalDoctorsToCheck = mustDoctors.filter(doctor => doctor.doctorId !== 1)
+        let doctorResults = this.currentEditPatient.activeMedos.medosDoctorResults
+        return finalDoctorsToCheck.every(doctor => doctorResults.some(result => result.doctorId === doctor.doctorId))
       },
       //* Перевод даты из ISO формата.
       dateFromIso (inputDate) {

@@ -12,6 +12,7 @@
             currentUser.roles.medos.premedical ||
             currentUser.roles.medos.functionalDiagnostics ||
             currentUser.roles.medos.doctor ||
+            currentUser.roles.medos.exam ||
             currentUser.roles.superuser"
         >
           <v-subheader inset>Профосмотр</v-subheader>
@@ -52,6 +53,19 @@
             <v-list-tile-content>
               <router-link :to="'/medos/doctor'">
                 <v-list-tile-title>Врач профосмотра</v-list-tile-title>
+              </router-link>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile
+              v-if="currentUser.roles.medos.admin ||
+            currentUser.roles.medos.exam ||
+            currentUser.roles.superuser">
+            <v-list-tile-action>
+              <v-icon>local_hospital</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <router-link :to="'/medos/exam'">
+                <v-list-tile-title>Обследования профосмотра</v-list-tile-title>
               </router-link>
             </v-list-tile-content>
           </v-list-tile>

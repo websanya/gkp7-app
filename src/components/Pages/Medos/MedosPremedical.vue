@@ -157,7 +157,7 @@
     <!-- / Диалог редактирования вредностей -->
 
     <!-- Диалог добавления конкретной вредности -->
-    <v-dialog v-model="addNewHarmDialog.show" persistent max-width="600px">
+    <v-dialog v-model="addNewHarmDialog.show" persistent max-width="800px">
       <v-card>
         <v-card-title v-if="currentAddHarm">
           <span class="headline">Добавить новую вредность</span>
@@ -533,7 +533,7 @@
           '2 - умеренно',
           '3 - злоупотребляет'
         ],
-        //* Все, что связано с snackbar, который всплывает во время ошибок.
+        //* Все, что связано с snackBar, который всплывает во время ошибок.
         snackBar: {
           show: false,
           message: '',
@@ -612,6 +612,12 @@
             examRoom: '416 кабинет'
           })
         }
+        //* Добавляем всем осмотр терапевта.
+        allTheMustDoctors.push({
+          doctorId: 1,
+          doctorName: 'Терапевт',
+          doctorRoom: '104/105 кабинет'
+        })
         //* Отбираем только уникальные назначения.
         let uniqueMustDoctors = allTheMustDoctors.filter(
           (doctor, index, self) => self.findIndex(d => d.doctorId === doctor.doctorId) === index

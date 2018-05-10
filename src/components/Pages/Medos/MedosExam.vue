@@ -1,13 +1,13 @@
 <template>
-  <div class=uwd-container>
+  <div class="uwd-container">
     <app-header :subsystem="subSystem.primaryColor" :subtitle="`Рабочее место ${currentUserExam.name}`"
                 :currentUser="currentUser">
     </app-header>
     <v-content>
       <v-container fluid fill-height>
         <v-layout
-            justify-center
-            align-center
+          justify-center
+          align-center
         >
           <v-flex xs12>
             <h2 class="text-xs-center">Пациенты на мед. осмотре</h2>
@@ -33,17 +33,17 @@
                 </v-flex>
               </v-layout>
               <v-data-table
-                  :headers="[
+                :headers="[
                     {text:'ФИО', sortable: false},
                     {text:'Осмотр', sortable: false},
                     {text: 'Дата рождения', sortable: false},
                     {text: 'Пол', sortable: false},
                     {text: 'Действия', sortable: false}
                   ]"
-                  v-if="patients.length > 0"
-                  :items="patients"
-                  hide-actions
-                  class="elevation-10 mt-4"
+                v-if="patients.length > 0"
+                :items="patients"
+                hide-actions
+                class="elevation-10 mt-4"
               >
                 <template slot="items" slot-scope="props">
                   <tr>
@@ -51,17 +51,39 @@
                     <td>{{ props.item.activeMedos.medosType.typeId }}</td>
                     <td>{{ props.item.dateBirth }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
-                    <td>
-                      <v-tooltip top :color="subSystem.primaryColor">
+                    <td width="211px">
+                      <v-tooltip v-if="checkPatientEcg()" top color="red darken-4">
                         <v-btn
-                            slot="activator"
-                            @click.native="openExaminationDialog(props.item)"
-                            :color="subSystem.primaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openExaminationDialog({patient: props.item, exam: 46})"
+                          color="red darken-4"
+                          icon
                         >
                           <v-icon color="white">assignment_turned_in</v-icon>
                         </v-btn>
-                        <span>Завести прием</span>
+                        <span>Добавить ЭКГ</span>
+                      </v-tooltip>
+                      <v-tooltip v-if="checkPatientSpirometry(props.item)" top color="light-blue darken-4">
+                        <v-btn
+                          slot="activator"
+                          @click.native="openExaminationDialog({patient: props.item, exam: 1})"
+                          color="light-blue darken-4"
+                          icon
+                        >
+                          <v-icon color="white">assignment_turned_in</v-icon>
+                        </v-btn>
+                        <span>Добавить спирометрию</span>
+                      </v-tooltip>
+                      <v-tooltip v-if="checkPatientAudiometry(props.item)" top color="pink darken-4">
+                        <v-btn
+                          slot="activator"
+                          @click.native="openExaminationDialog({patient: props.item, exam: 34})"
+                          color="pink darken-4"
+                          icon
+                        >
+                          <v-icon color="white">assignment_turned_in</v-icon>
+                        </v-btn>
+                        <span>Добавить аудиометрию</span>
                       </v-tooltip>
                     </td>
                   </tr>
@@ -83,15 +105,158 @@
     </v-snackbar>
 
     <!-- Диалог на обследование -->
-    <v-dialog v-model="examResultDialog.show" persistent max-width="500px">
+    <v-dialog v-model="examResultDialog.show" persistent max-width="700px">
       <v-card>
         <v-card-title>
-          <span class="headline">Заголовок</span>
+          <span class="headline">Обследование для пациента<br/><span
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+          </span>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
-            <v-layout row wrap>
+            <v-layout v-if="examResultDialog.exam === 46 || examResultDialog.exam === 1" row wrap>
+              <v-flex v-if="examResultDialog.exam === 46" sm12>
+                <h2>ЭКГ</h2>
+              </v-flex>
+              <v-flex v-if="examResultDialog.exam === 46" sm12>
+                <v-checkbox
+                  label="Пациент прошел ЭКГ"
+                  v-model="currentExamResult.examResult"
+                ></v-checkbox>
+              </v-flex>
+              <v-flex v-if="examResultDialog.exam === 1" sm12>
+                <h2>Спирометрия</h2>
+              </v-flex>
+              <v-flex v-if="examResultDialog.exam === 1" sm12>
+                <v-checkbox
+                  label="Пациент прошел спирометрию"
+                  v-model="currentExamResult.examResult"
+                ></v-checkbox>
+              </v-flex>
+            </v-layout>
+            <v-layout v-if="examResultDialog.exam === 34 && currentExamResult.examResult" row wrap>
               <v-flex sm12>
+                <h2>Аудиометрия</h2>
+              </v-flex>
+              <v-flex sm12 md1>
+                <h3 style="margin: 22px 0 6px">AD</h3>
+              </v-flex>
+              <v-flex sm12 md1>
+                <v-text-field
+                  label="125"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.ad.f125"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md1>
+                <v-text-field
+                  label="250"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.ad.f250"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md1>
+                <v-text-field
+                  label="500"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.ad.f500"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="1000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.ad.f1000"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="2000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.ad.f2000"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="4000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.ad.f4000"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="6000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.ad.f6000"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <v-layout v-if="examResultDialog.exam === 34 && currentExamResult.examResult" row wrap>
+              <v-flex sm12 md1>
+                <h3 style="margin: 22px 0 6px">AS</h3>
+              </v-flex>
+              <v-flex sm12 md1>
+                <v-text-field
+                  label="125"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.as.f125"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md1>
+                <v-text-field
+                  label="250"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.as.f250"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md1>
+                <v-text-field
+                  label="500"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.as.f500"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="1000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.as.f1000"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="2000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.as.f2000"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="4000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.as.f4000"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="6000"
+                  :color="subSystem.primaryColor"
+                  v-model="currentExamResult.examResult.as.f6000"
+                >
+                </v-text-field>
               </v-flex>
             </v-layout>
           </v-container>
@@ -99,8 +264,9 @@
         <v-card-actions>
           <v-spacer>
           </v-spacer>
-          <v-btn :color="subSystem.primaryColor" flat @click.native="noExamDialog()">Закрыть</v-btn>
-          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="yesExamDialog()">Сохранить</v-btn>
+          <v-btn :color="subSystem.primaryColor" flat @click.native="noExaminationDialog()">Закрыть</v-btn>
+          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="yesExaminationDialog()">Сохранить
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -150,23 +316,22 @@
         patientQuery: {},
         //* Подгруженные пациенты после запроса по ФИО.
         patients: [],
-        //* Если доктор, то данные.
+        //* Если обследование, то данные.
         currentUserExam: {
           id: '',
           name: ''
         },
         //* Пациент, которого редактируем.
         currentEditPatient: {
-          activeMedos: {},
-          bloodResults: [],
-          urineClinicalResults: []
+          activeMedos: {}
         },
         //* Обследование, которое редактируем.
         currentExamResult: {},
         //* Диалог приема врача.
         examResultDialog: {
           show: false,
-          edit: false
+          edit: false,
+          exam: ''
         },
         //* Все, что связано с snackbar, который всплывает во время ошибок.
         snackBar: {
@@ -177,8 +342,8 @@
         },
         //* Цвета для данной подсистемы.
         subSystem: {
-          primaryColor: 'purple darken-3',
-          secondaryColor: 'orange darken-3'
+          primaryColor: 'deep-purple darken-4',
+          secondaryColor: 'deep-orange darken-4'
         }
       }
     },
@@ -189,9 +354,113 @@
     },
     methods: {
       //* Методы про диалог приема врача.
-      openExaminationDialog (item) {},
-      noExaminationDialog () {},
-      yesExaminationDialog () {},
+      openExaminationDialog (item) {
+        this.currentEditPatient = item.patient
+        this.examResultDialog.exam = item.exam
+        this.examResultDialog.show = true
+        //* Подготовим объект для аудиометрии.
+        if (this.examResultDialog.exam === 34) {
+          this.currentExamResult = {
+            examId: 34,
+            examResult: {
+              ad: {
+                f125: '10',
+                f250: '10',
+                f500: '10',
+                f1000: '10',
+                f2000: '10',
+                f4000: '10',
+                f6000: '10'
+              },
+              as: {
+                f125: '10',
+                f250: '10',
+                f500: '10',
+                f1000: '10',
+                f2000: '10',
+                f4000: '10',
+                f6000: '10'
+              }
+            }
+          }
+        } else {
+          this.currentExamResult = {
+            examId: this.examResultDialog.exam,
+            examResult: false
+          }
+        }
+        //* Проверяем есть ли уже такое обследование, тогда редактируем.
+        let hasExamResult = this.currentEditPatient.activeMedos.medosExamResults.some(
+          result => result.examId === this.examResultDialog.exam
+        )
+        if (hasExamResult) {
+          this.examResultDialog.edit = true
+          this.currentExamResult = this.currentEditPatient.activeMedos.medosExamResults.find(
+            result => result.examId === this.examResultDialog.exam
+          )
+        }
+      },
+      noExaminationDialog () {
+        this.examResultDialog = {
+          show: false,
+          edit: false,
+          exam: ''
+        }
+      },
+      yesExaminationDialog () {
+        let tmpExamResult = this.currentExamResult
+        if (this.examResultDialog.edit) {
+          Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/examResult/${tmpExamResult._id}`, {
+            examResult: tmpExamResult
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 2000
+              this.getMedosPatients()
+              this.examResultDialog = {
+                show: false,
+                edit: false,
+                exam: ''
+              }
+              this.currentEditPatient = {
+                activeMedos: {}
+              }
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else {
+          Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/examResult/`, {
+            examResult: tmpExamResult
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(res => {
+            if (res.data.success) {
+              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.timeout = 2000
+              this.getMedosPatients()
+              this.examResultDialog = {
+                show: false,
+                edit: false,
+                exam: ''
+              }
+              this.currentEditPatient = {
+                activeMedos: {}
+              }
+            } else {
+              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.timeout = 5000
+            }
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        }
+      },
       //* Запрашиваем список пациентов по введенным ФИО.
       getMedosPatients () {
         let tempQuery = {}
@@ -224,49 +493,43 @@
           params: {user_id: this.$cookie.get('user_id')}
         }).then(({data}) => {
           this.currentUser = data
-          this.currentDoctorResult.doctorComplaints = 'Нет'
-          this.currentUserDoctor.id = this.currentUser.roles.medos.doctor
-          switch (this.currentUser.roles.medos.doctor) {
+          this.currentUserExam.id = this.currentUser.roles.medos.exam
+          switch (this.currentUserExam.id) {
             case 1:
-              this.currentUserDoctor.name = 'терапевт'
-              this.currentDoctorResult.doctorStatus = 'Кожные покровы и видимые слизистые обычной окраски. Язык чистый. Дыхание везикулярное, хрипов нет. Тоны сердца ясные, ритм правильный, Живот мягкий, безболезненный. Отеков нет.'
+              this.currentUserExam.name = 'лаборанта ОФД'
               break
-            case 2:
-              this.currentUserDoctor.name = 'оториноларинголог'
-              this.currentDoctorResult.doctorStatus = 'Слизистая носа розовая, носовые ходы свободные. Миндалины не увеличены, слизистая глотки розовая, чистая, Слизистая гортани розовая, голосовые связки серые, подвижные, голос чистый. Уши : слуховой проход свободный, барабанная перепонка не изменена. Шепотная речь 6м справа, 6м слева. Вестибулярных нарушений нет.'
-              break
-            case 3:
-              this.currentUserDoctor.name = 'дерматовенеролог'
-              this.currentDoctorResult.doctorStatus = 'Внешний осмотр: кожные покровы  чистые, обычной окраски. Лимфоузлы не увеличены во всех группах. Наружные половые органы: видимые слизистые бледно розовой окраски. Перианальная область без специфических высыпаний.'
-              break
-            case 4:
-              this.currentUserDoctor.name = 'офтальмолог'
-              this.currentDoctorResult.doctorStatus = 'Положение век и рост ресниц правильное. Движение глаз в полном объеме. Коньюнктива розовая, Роговица, прозрачная. Передняя камера средней глубины. Радужка структурная, пигментная кайма сохранена. Зрачок не изменен. Хрусталик и стекловидное тело прозрачны.'
-              break
-            case 5:
-              this.currentUserDoctor.name = 'хирург'
-              this.currentDoctorResult.doctorStatus = 'Шея, голова, грудная клетка без патологии. Физиологические изгибы и подвижность сохранены. Лимфоузлы без патологии. Живот мягкий, безболезненный. Остов таза симметричный, наружные половые органы без патологии. Ректальное пальцевое исследование: сфинктер в тонусе, патологии в просвете нет. Верхние конечности без патологии, нижние конечности без патологии , пульсация периферических сосудов сохранена.'
-              break
-            case 6:
-              this.currentUserDoctor.name = 'невролог'
-              this.currentDoctorResult.doctorStatus = 'Наружный осмотр: норма. Высшая нервная деятельность: норма. Черепно-мозговая иннервация: норма. Сухожильные рефлексы: живые. Чувствительность кожи: норма. Мануальное исследование: патологии нет. Поза Ромберга: устойчивость. Пальце-носовая проба: четкое попадание. Походка: не изменена.'
-              break
-            case 7:
-              this.currentUserDoctor.name = 'стоматолог'
-              this.currentDoctorResult.doctorStatus = 'Лицо симметрично, кожные покровы не изменены. Движения в височно-нижнечелюстном суставе в полном объеме. Слизистая полости рта влажная, гладкая, чистая. Области выхода протоков слюнных желез не изменены. Край десен имеет бледно-розовую окраску и плотно прилегает к шейкам зубов. Зубной ряд полный. Съемных зубных протезов нет.'
-              break
-            case 12:
-              this.currentUserDoctor.name = 'гинеколог'
-              this.currentDoctorResult.doctorStatus = 'Наружные половые органы развиты правильно. Влагалище, своды без патологии. Шейка матки без патологии. Тело матки не увеличено, правильной формы, положение физиологическое. Цервикальный канал закрыт, придатки не пальпируются. Выделения скудные, без цвета и неприятного запаха. Пальцевое исследование прямой кишки – патологии в малом тазу нет. Исследование молочных желез: симметричные, окраска, соски, консистенция обычные.'
-              break
-            default:
-              this.currentUserDoctor.name = 'терапевт'
-              this.currentDoctorResult.doctorStatus = 'Кожные покровы и видимые слизистые обычной окраски. Язык чистый. Дыхание везикулярное, хрипов нет. Тоны сердца ясные, ритм правильный, Живот мягкий, безболезненный. Отеков нет.'
-              break
+            case 34:
+              this.currentUserExam.name = 'аудиометриста'
+          }
+          if (this.currentUser.roles.medos.admin || this.currentUser.roles.user) {
+            this.currentUserExam.name = 'обследований проф. осмотра'
           }
         }).catch(err => {
           this.errorHandler(err)
         })
+      },
+      //* Проверить пациента на ЭКГ.
+      checkPatientEcg () {
+        let userCanDoEcg = (this.currentUserExam && this.currentUserExam.id === 1) ||
+          (this.currentUser.roles.medos && this.currentUser.roles.medos.admin) ||
+          this.currentUser.roles.superuser
+        return userCanDoEcg
+      },
+      //* Проверить пациента на Спирометрию.
+      checkPatientSpirometry (patient) {
+        let mustExams = patient.activeMedos.medosExams.mustExams
+        let userCanDoSpirometry = (this.currentUserExam && this.currentUserExam.id === 1) ||
+          (this.currentUser.roles.medos && this.currentUser.roles.medos.admin) ||
+          this.currentUser.roles.superuser
+        return mustExams.some(exam => exam.examId === 1) && userCanDoSpirometry
+      },
+      //* Проверить пациента на Аудиометрию.
+      checkPatientAudiometry (patient) {
+        let mustExams = patient.activeMedos.medosExams.mustExams
+        let userCanDoAudiometry = (this.currentUserExam && this.currentUserExam.id === 34) ||
+          (this.currentUser.roles.medos && this.currentUser.roles.medos.admin) ||
+          this.currentUser.roles.superuser
+        return mustExams.some(exam => exam.examId === 34) && userCanDoAudiometry
       },
       //* Перевод даты из ISO формата.
       dateFromIso (inputDate) {
@@ -300,14 +563,9 @@
 
 <style lang="scss">
   .router-link-exact-active {
-    background-color: #6a1b9a;
+    background-color: #311b92;
     color: white;
     padding: 0 6px;
-  }
-
-  .theme--light .input-group input:disabled::placeholder,
-  .theme--light .input-group input:disabled {
-    color: rgba(245, 127, 23, 0.7) !important;
   }
 
   .container.grid-list-md {
