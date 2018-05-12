@@ -5,8 +5,7 @@ const GKP7API = `http://${window.location.hostname}:3001`
 
 export default {
   user: {
-    authenticated: false,
-    roles: {}
+    authenticated: false
   },
 
   authenticate (context, credentials, redirect) {

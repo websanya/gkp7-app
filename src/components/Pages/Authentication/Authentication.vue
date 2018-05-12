@@ -40,7 +40,7 @@
             <v-snackbar :timeout="6000"
                         bottom="bottom"
                         color="red lighten-1"
-                        v-model="snackbar">
+                        v-model="snackBar">
               {{ message }}
             </v-snackbar>
           </v-flex>
@@ -56,7 +56,7 @@
   export default {
     data () {
       return {
-        snackbar: false,
+        snackBar: false,
         validLogin: false,
         loginPasswordVisible: false,
         rules: [(value) => !!value || 'Поле обязательно для заполнения'],

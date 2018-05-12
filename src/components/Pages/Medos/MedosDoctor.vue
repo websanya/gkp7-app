@@ -430,8 +430,8 @@
           </v-btn>
           <v-btn
             v-if="this.currentUser.roles.medos.doctor === 1 || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser"
-            :color="subSystem.secondaryColor" class="white--text" @click.native="closeMedosDialog"
-            :disabled="!(ifAllDoctorsComplete() && ifAllExamsComplete())"
+            :color="subSystem.secondaryColor" class="white--text" @click.native="openArchiveMedosDialog"
+            :disabled="!(ifAllDoctorsComplete() && ifAllExamsComplete() && currentEditPatient.activeMedos.medosDoctorResults.some(result => result.doctorId === 1))"
           >Закрыть медосмотр
           </v-btn>
         </v-card-actions>
@@ -770,6 +770,25 @@
       </v-card>
     </v-dialog>
     <!-- / Диалог годностей и результатов -->
+
+    <!-- Диалог закрытия мед. осмотра -->
+    <v-dialog v-model="archiveMedosDialog.show" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">
+            Вы точно хотите архивировать мед. осмотр<br/>
+            от <span class="green--text">{{ currentEditPatient.activeMedos.medosRegistrationDate | formatDate }}</span>?
+          </span>
+        </v-card-title>
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn :color="subSystem.deleteColor" flat @click.native="noArchiveMedosDialog">Нет</v-btn>
+          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="yesArchiveMedosDialog">Да</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- / Диалог закрытия мед. осмотра -->
 
   </div>
 </template>
@@ -1243,9 +1262,45 @@
       },
       //* Закрыть мед. осмотр.
       openArchiveMedosDialog () {
+        this.archiveMedosDialog.show = true
       },
-      noArchiveMedosDialog () {},
-      yesArchiveMedosDialog () {},
+      noArchiveMedosDialog () {
+        this.archiveMedosDialog.show = false
+      },
+      yesArchiveMedosDialog () {
+        let tempMedos = this.currentEditPatient.activeMedos
+        Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/medosFinal/`, {
+          medosResult: tempMedos
+        }, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+        }).then(res => {
+          if (res.data.success) {
+            this.snackBar.color = 'green darken-1 white--text'
+            this.snackBar.timeout = 2000
+            //* Закрыть окна.
+            this.archiveMedosDialog.show = false
+            this.makeAppointmentDialog = {
+              show: false,
+              showBlood: false,
+              showUrine: false,
+              showInfo: false,
+              edit: false
+            }
+            this.currentEditPatient = {
+              activeMedos: {},
+              bloodResults: [],
+              urineClinicalResults: []
+            }
+          } else {
+            this.snackBar.color = 'red darken-2 white--text'
+            this.snackBar.timeout = 5000
+          }
+          this.snackBar.message = res.data.message
+          this.snackBar.show = true
+        }).catch(err => {
+          this.errorHandler(err)
+        })
+      },
       //* Методы про диалог осбледования.
       openExamDialog (item) {
         let activeExamResults = this.currentEditPatient.activeMedos.medosExamResults

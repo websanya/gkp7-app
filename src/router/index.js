@@ -79,33 +79,46 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   let authenticated = Auth.default.user.authenticated
-  let roles = Auth.default.user.roles
+  let roles = (Auth.default.user.roles) ? Auth.default.user.roles : false
   if (to.path !== '/login') {
     if (authenticated) {
-      next()
-    } else {
-      router.push('/login')
-    }
-    if (from.path === '/login') {
-      if (roles.superuser) {
-        router.push('/admin/users')
-      } else if (roles.medos && (roles.medos.doctor !== 0 || roles.medos.admin)) {
-        router.push('/medos/doctor')
-      } else if (roles.medos && roles.medos.exam !== 0) {
-        router.push('/medos/exam')
-      } else if (roles.medos && roles.medos.receptionist) {
-        router.push('/medos/reception')
-      } else if (roles.medos && roles.medos.premedical) {
-        router.push('/medos/premedical')
-      } else if (roles.radiography && (roles.medos.radiography.admin || roles.medos.radiography.assistant)) {
-        router.push('/radiography')
-      } else if (roles.laboratory && (roles.medos.laboratory.admin || roles.medos.laboratory.assistant)) {
-        router.push('/laboratory')
-      } else if (roles.vaccination && (roles.medos.vaccination.admin || roles.medos.vaccination.assistant)) {
-        router.push('/vaccination')
+      if (to.path === '/' && from.path === '/login') {
+        console.log('redirect logged users to corresponding page')
+        if (roles.superuser) {
+          router.push('/admin/users')
+        } else if (roles.medos && (roles.medos.doctor !== 0 || roles.medos.admin)) {
+          router.push('/medos/doctor')
+        } else if (roles.medos && roles.medos.exam !== 0) {
+          router.push('/medos/exam')
+        } else if (roles.medos && roles.medos.receptionist) {
+          router.push('/medos/reception')
+        } else if (roles.medos && roles.medos.premedical) {
+          router.push('/medos/premedical')
+        } else if (roles.radiography && (roles.medos.radiography.admin || roles.medos.radiography.assistant)) {
+          router.push('/radiography')
+        } else if (roles.laboratory && (roles.medos.laboratory.admin || roles.medos.laboratory.assistant)) {
+          router.push('/laboratory')
+        } else if (roles.vaccination && (roles.medos.vaccination.admin || roles.medos.vaccination.assistant)) {
+          router.push('/vaccination')
+        } else {
+          next()
+        }
       } else {
+        if (from.path !== '/login') {
+          console.log('redirect authenticated users who tried another page from another page')
+          next()
+        } else {
+          console.log('redirect authenticated users who tried another page from login')
+          router.push('/login')
+        }
+        if (to.path === '/' || to.path === '/#/') {
+          console.log('redirect to login if authenticated & tried home from another page')
+          router.push('/login')
+        }
         next()
       }
+    } else {
+      router.push('/login')
     }
   } else {
     next()
