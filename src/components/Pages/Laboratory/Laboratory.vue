@@ -40,10 +40,21 @@
               >
                 <template slot="items" slot-scope="props">
                   <tr>
+                    <td width="72px">
+                      <v-tooltip right color="light-blue darken-4">
+                        <v-icon
+                          slot="activator"
+                          v-if="(props.item.hasActiveMedos)"
+                          color="light-blue darken-4">
+                          assignment_ind
+                        </v-icon>
+                        <span>Пациент проходит мед. осмотр</span>
+                      </v-tooltip>
+                    </td>
                     <td>{{ props.item.fio }}</td>
                     <td>{{ props.item.dateBirth }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
-                    <td width="156px">
+                    <td width="266px">
                       <v-tooltip top :color="subSystem.primaryColor">
                         <v-btn
                             slot="activator"
@@ -65,6 +76,28 @@
                           <v-icon color="white">colorize</v-icon>
                         </v-btn>
                         <span>Список анализов мочи</span>
+                      </v-tooltip>
+                      <v-tooltip v-if="ifPatientNeedsSmear(props.item)" top color="purple darken-3">
+                        <v-btn
+                          slot="activator"
+                          @click.native="openSmearResultsListDialog(props.item)"
+                          color="purple darken-3"
+                          icon
+                        >
+                          <v-icon color="white">colorize</v-icon>
+                        </v-btn>
+                        <span>Список мазков</span>
+                      </v-tooltip>
+                      <v-tooltip v-if="ifPatientNeedsRw(props.item)" top color="blue-grey darken-4">
+                        <v-btn
+                          slot="activator"
+                          @click.native="openRwResultsListDialog(props.item)"
+                          color="blue-grey darken-4"
+                          icon
+                        >
+                          <v-icon color="white">colorize</v-icon>
+                        </v-btn>
+                        <span>Список анализов RW</span>
                       </v-tooltip>
                     </td>
                   </tr>
@@ -157,7 +190,7 @@
         <v-card-actions>
           <v-spacer>
           </v-spacer>
-          <v-btn :color="subSystem.primaryColor" flat @click.native="noBloodResultsListDialog">Закрыть</v-btn>
+          <v-btn :color="subSystem.primaryColor" flat @click.native="noResultsListDialog">Закрыть</v-btn>
         </v-card-actions>
       </v-card>
       <v-card v-if="listAnalyzesDialog.analyzeType === 'urineClinical'">
@@ -231,7 +264,147 @@
         <v-card-actions>
           <v-spacer>
           </v-spacer>
-          <v-btn :color="subSystem.secondaryColor" flat @click.native="noUrineResultsListDialog">Закрыть</v-btn>
+          <v-btn :color="subSystem.secondaryColor" flat @click.native="noResultsListDialog">Закрыть</v-btn>
+        </v-card-actions>
+      </v-card>
+      <v-card v-if="listAnalyzesDialog.analyzeType === 'smear'">
+        <v-card-title>
+          <span class="headline">Мазки пациента <br/><span
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+          </span>
+          <v-spacer>
+          </v-spacer>
+          <v-layout row wrap>
+            <!-- Добавить анализ -->
+            <v-flex sm12 md12>
+              <v-btn @click.native="openResultDialog({edit: false})" color="purple darken-3"
+                     dark large block>
+                Добавить мазок
+              </v-btn>
+            </v-flex>
+            <!-- / Добавить анализ -->
+          </v-layout>
+        </v-card-title>
+        <v-card-text>
+          <v-container grid-list-md v-if="currentEditPatient.smearResults.length > 0">
+            <v-data-table
+              :headers="[
+                  { text: 'Дата анализа', value: 'smearDate' },
+                  { text: 'Гонококки', value: 'smearResult.smearGonococcus' },
+                  { text: 'Лейкоциты', value: 'smearResult.smearLeucocytes' },
+                  { text: 'Действия', value: '' }
+                ]"
+              :items="currentEditPatient.smearResults"
+              hide-actions
+              class="elevation-5 mt-4"
+            >
+              <template slot="items" slot-scope="props">
+                <tr>
+                  <td>{{ props.item.smearDate | formatDate }}</td>
+                  <td>{{ (props.item.smearResult.smearGonococcus) ? 'Обнаружены' : 'Не обнаружены' }}</td>
+                  <td>{{ smearLeucocytes.find(item => item.value === props.item.smearResult.smearLeucocytes).text }}</td>
+                  <td width="172px">
+                    <v-tooltip top color="purple darken-3">
+                      <v-btn
+                        slot="activator"
+                        @click.native="openResultDialog({edit: true, item:props.item})"
+                        color="purple darken-3"
+                        icon
+                      >
+                        <v-icon color="white">colorize</v-icon>
+                      </v-btn>
+                      <span>Информация об анализе</span>
+                    </v-tooltip>
+                    <v-tooltip top :color="subSystem.deleteColor">
+                      <v-btn
+                        slot="activator"
+                        @click.native="openRemoveDialog(props.item)"
+                        :color="subSystem.deleteColor"
+                        icon
+                      >
+                        <v-icon color="white">delete</v-icon>
+                      </v-btn>
+                      <span>Удалить анализ</span>
+                    </v-tooltip>
+                  </td>
+                </tr>
+              </template>
+            </v-data-table>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn color="purple darken-3" flat @click.native="noResultsListDialog">Закрыть</v-btn>
+        </v-card-actions>
+      </v-card>
+      <v-card v-if="listAnalyzesDialog.analyzeType === 'rw'">
+        <v-card-title>
+          <span class="headline">Анализы на RW пациента <br/><span
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+          </span>
+          <v-spacer>
+          </v-spacer>
+          <v-layout row wrap>
+            <!-- Добавить анализ -->
+            <v-flex sm12 md12>
+              <v-btn @click.native="openResultDialog({edit: false})" color="blue-grey darken-4"
+                     dark large block>
+                Добавить анализ
+              </v-btn>
+            </v-flex>
+            <!-- / Добавить анализ -->
+          </v-layout>
+        </v-card-title>
+        <v-card-text>
+          <v-container grid-list-md v-if="currentEditPatient.rwResults.length > 0">
+            <v-data-table
+              :headers="[
+                  { text: 'Дата анализа', value: 'rwDate' },
+                  { text: 'RW', value: 'rwResult' },
+                  { text: 'Действия', value: '' }
+                ]"
+              :items="currentEditPatient.rwResults"
+              hide-actions
+              class="elevation-5 mt-4"
+            >
+              <template slot="items" slot-scope="props">
+                <tr>
+                  <td>{{ props.item.rwDate | formatDate }}</td>
+                  <td>{{ rwTypes.find(item => item.value === props.item.rwResult).text }}</td>
+                  <td width="172px">
+                    <v-tooltip top color="blue-grey darken-4">
+                      <v-btn
+                        slot="activator"
+                        @click.native="openResultDialog({edit: true, item:props.item})"
+                        color="blue-grey darken-4"
+                        icon
+                      >
+                        <v-icon color="white">colorize</v-icon>
+                      </v-btn>
+                      <span>Информация об анализе</span>
+                    </v-tooltip>
+                    <v-tooltip top :color="subSystem.deleteColor">
+                      <v-btn
+                        slot="activator"
+                        @click.native="openRemoveDialog(props.item)"
+                        :color="subSystem.deleteColor"
+                        icon
+                      >
+                        <v-icon color="white">delete</v-icon>
+                      </v-btn>
+                      <span>Удалить анализ</span>
+                    </v-tooltip>
+                  </td>
+                </tr>
+              </template>
+            </v-data-table>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn color="purple darken-3" flat @click.native="noResultsListDialog">Закрыть</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -730,11 +903,241 @@
           </v-btn>
         </v-card-actions>
       </v-card>
+      <v-card v-if="listAnalyzesDialog.analyzeType === 'smear'">
+        <v-card-title>
+          <v-flex sm12>
+            <span class="headline">
+            Добавление мазка для<br/><span
+              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>?
+          </span>
+          </v-flex>
+        </v-card-title>
+        <v-card-text>
+          <v-container grid-list-md>
+            <v-layout row wrap>
+              <v-flex sm12 md2>
+                <v-text-field
+                  v-if="!addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearDate"
+                  mask="##.##.####"
+                  return-masked-value
+                >
+                </v-text-field>
+                <v-text-field
+                  v-if="addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  color="purple darken-3"
+                  :value="dateFromIso(currentSmearResult.smearDate)"
+                  readonly
+                  disabled
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="Номер"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearNumber"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md8>
+                <v-spacer></v-spacer>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12>
+                <h3>Мазок на гонококк</h3>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12 md3>
+                <v-select
+                  :items="smearBoolean"
+                  label="Гонококки"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearResult.smearGonococcus"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12 md3>
+                <v-select
+                  :items="smearLeucocytes"
+                  label="Лейкоциты"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearResult.smearLeucocytes"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12 md3>
+                <v-select
+                  :items="smearBoolean"
+                  label="Диплококки"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearResult.smearDiplococcus"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12 md3>
+                <v-select
+                  :items="smearBoolean"
+                  label="Клетки эпителия"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearResult.smearEpithelium"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12 md3>
+                <v-select
+                  :items="smearBoolean"
+                  label="Трихомонады"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearResult.smearTrichomonas"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12 md5>
+                <v-select
+                  :items="smearBoolean"
+                  label="Дрожжеподобные грибы"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearResult.smearFungus"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12 md4>
+                <v-select
+                  :items="smearBoolean"
+                  label="'Ключевые' клетки"
+                  color="purple darken-3"
+                  v-model="currentSmearResult.smearResult.smearKeyCells"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn color="purple darken-3" flat class="white--text" @click.native="noResultDialog">Закрыть
+          </v-btn>
+          <v-btn
+            v-if="!addAnalyzeDialog.edit"
+            color="purple darken-3"
+            class="white--text"
+            @click.native="yesResultDialog">
+            Добавить
+          </v-btn>
+          <v-btn
+            v-if="addAnalyzeDialog.edit"
+            color="purple darken-3"
+            class="white--text"
+            @click.native="yesResultDialog">
+            Изменить
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+      <v-card v-if="listAnalyzesDialog.analyzeType === 'rw'">
+        <v-card-title>
+          <v-flex sm12>
+            <span class="headline">
+            Добавление RW для<br/><span
+              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>?
+          </span>
+          </v-flex>
+        </v-card-title>
+        <v-card-text>
+          <v-container grid-list-md>
+            <v-layout row wrap>
+              <v-flex sm12 md2>
+                <v-text-field
+                  v-if="!addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  color="blue-grey darken-4"
+                  v-model="currentRwResult.rwDate"
+                  mask="##.##.####"
+                  return-masked-value
+                >
+                </v-text-field>
+                <v-text-field
+                  v-if="addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  color="blue-grey darken-4"
+                  :value="dateFromIso(currentRwResult.rwDate)"
+                  readonly
+                  disabled
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md2>
+                <v-text-field
+                  label="Номер"
+                  color="blue-grey darken-4"
+                  v-model="currentRwResult.rwNumber"
+                >
+                </v-text-field>
+              </v-flex>
+              <v-flex sm12 md8>
+                <v-spacer></v-spacer>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12>
+                <h3>Анализ крови на RW</h3>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12>
+                <v-select
+                  :items="rwTypes"
+                  label="RW результат"
+                  color="blue-grey darken-4"
+                  v-model="currentRwResult.rwResult"
+                  autocomplete
+                >
+                </v-select>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn color="blue-grey darken-4" flat class="white--text" @click.native="noResultDialog">Закрыть
+          </v-btn>
+          <v-btn
+            v-if="!addAnalyzeDialog.edit"
+            color="blue-grey darken-4"
+            class="white--text"
+            @click.native="yesResultDialog">
+            Добавить
+          </v-btn>
+          <v-btn
+            v-if="addAnalyzeDialog.edit"
+            color="blue-grey darken-4"
+            class="white--text"
+            @click.native="yesResultDialog">
+            Изменить
+          </v-btn>
+        </v-card-actions>
+      </v-card>
     </v-dialog>
     <!-- / Диалог добавления анализа -->
 
     <!-- Диалог удаления анализа -->
-    <v-dialog v-model="removeDialog.show" persistent max-width="800px">
+    <v-dialog v-model="removeDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title v-if="listAnalyzesDialog.analyzeType === 'blood'">
           <span class="headline">
@@ -745,6 +1148,18 @@
         <v-card-title v-if="listAnalyzesDialog.analyzeType === 'urineClinical'">
           <span class="headline">
             Удалить анализ мочи от {{ currentRemoveItem.urineDate | formatDate }} для<br/>
+            <span class="red--text text--darken-2">«{{ currentEditPatient.fio }}»</span>?
+          </span>
+        </v-card-title>
+        <v-card-title v-if="listAnalyzesDialog.analyzeType === 'smear'">
+          <span class="headline">
+            Удалить мазок от {{ currentRemoveItem.smearDate | formatDate }} для<br/>
+            <span class="red--text text--darken-2">«{{ currentEditPatient.fio }}»</span>?
+          </span>
+        </v-card-title>
+        <v-card-title v-if="listAnalyzesDialog.analyzeType === 'rw'">
+          <span class="headline">
+            Удалить RW от {{ currentRemoveItem.rwDate | formatDate }} для<br/>
             <span class="red--text text--darken-2">«{{ currentEditPatient.fio }}»</span>?
           </span>
         </v-card-title>
@@ -778,7 +1193,9 @@
         //* Редактируемый пациент.
         currentEditPatient: {
           bloodResults: [],
-          urineClinicalResults: []
+          urineClinicalResults: [],
+          smearResults: [],
+          rwResults: []
         },
         //* Редактируемый клинический анализ крови.
         currentBloodResult: {
@@ -846,6 +1263,28 @@
             slime: false
           }
         },
+        //* Редактируемый мазок.
+        currentSmearResult: {
+          smearDate: '',
+          smearNumber: '',
+          smearResult: {
+            smearGonococcus: false,
+            smearLeucocytes: 0,
+            smearDiplococcus: false,
+            smearEpithelium: false,
+            smearFlora: '',
+            smearSlime: '',
+            smearTrichomonas: false,
+            smearFungus: false,
+            smearKeyCells: false
+          }
+        },
+        //* Редактируемый RW анализ.
+        currentRwResult: {
+          rwDate: '',
+          rwNumber: '',
+          rwResult: 1
+        },
         //* Удаляемый элемент.
         currentRemoveItem: {},
         //* Диалог списка анализов.
@@ -858,10 +1297,11 @@
           show: false,
           edit: false
         },
+        //* Диалог удаления анализа.
         removeDialog: {
           show: false
         },
-        //* Справочники.
+        //* Справочники мочи.
         urineColors: [
           {
             value: {
@@ -1084,7 +1524,75 @@
             text: '0 - нет'
           }
         ],
-        //* Все, что связано с snackbar, который всплывает во время ошибок.
+        //* Справочники мазков.
+        smearBoolean: [
+          {
+            value: false,
+            text: '1 - Не обнаружены'
+          },
+          {
+            value: true,
+            text: '2 - Обнаружены'
+          }
+        ],
+        smearLeucocytes: [
+          {
+            value: 1,
+            text: '1 - Единичные'
+          },
+          {
+            value: 2,
+            text: '2 - до 25'
+          },
+          {
+            value: 3,
+            text: '3 - до 50'
+          },
+          {
+            value: 4,
+            text: '4 - до 100'
+          },
+          {
+            value: 5,
+            text: '5 - выше 100'
+          }
+        ],
+        //* Справочник кодов на RW.
+        rwTypes: [
+          {
+            value: 1,
+            text: '1 - Отрицительный'
+          },
+          {
+            value: 2,
+            text: '2 - Положительный X'
+          },
+          {
+            value: 3,
+            text: '3 - Положительный XX'
+          },
+          {
+            value: 4,
+            text: '4 - Положительный XXX'
+          },
+          {
+            value: 5,
+            text: '5 - Положительный XXXX'
+          },
+          {
+            value: 6,
+            text: '6 - Гемолиз'
+          },
+          {
+            value: 7,
+            text: '7 - Хилезная'
+          },
+          {
+            value: 8,
+            text: '8 - Брак'
+          }
+        ],
+        //* Все, что связано с snackBar, который всплывает во время ошибок.
         snackBar: {
           show: false,
           message: '',
@@ -1105,7 +1613,7 @@
       this.getCurrentUser()
     },
     methods: {
-      //* Методы про диалог списка анализов крови.
+      //* Метод про диалог списка анализов крови.
       openBloodResultsListDialog (item) {
         this.currentEditPatient = item
         this.listAnalyzesDialog = {
@@ -1113,17 +1621,7 @@
           analyzeType: 'blood'
         }
       },
-      noBloodResultsListDialog () {
-        this.currentEditPatient = {
-          bloodResults: [],
-          urineClinicalResults: []
-        }
-        this.listAnalyzesDialog = {
-          show: false,
-          analyzeType: ''
-        }
-      },
-      //* Методы про диалог списка анализов мочи.
+      //* Метод про диалог списка анализов мочи.
       openUrineResultsListDialog (item) {
         this.currentEditPatient = item
         this.listAnalyzesDialog = {
@@ -1131,10 +1629,29 @@
           analyzeType: 'urineClinical'
         }
       },
-      noUrineResultsListDialog () {
+      //* Метод про диалог списка мазков.
+      openSmearResultsListDialog (item) {
+        this.currentEditPatient = item
+        this.listAnalyzesDialog = {
+          show: true,
+          analyzeType: 'smear'
+        }
+      },
+      //* Метод про диалог списка анализов RW.
+      openRwResultsListDialog (item) {
+        this.currentEditPatient = item
+        this.listAnalyzesDialog = {
+          show: true,
+          analyzeType: 'rw'
+        }
+      },
+      //* Метод про закрытие диалога списка анализов.
+      noResultsListDialog () {
         this.currentEditPatient = {
           bloodResults: [],
-          urineClinicalResults: []
+          urineClinicalResults: [],
+          smearResults: [],
+          rwResults: []
         }
         this.listAnalyzesDialog = {
           show: false,
@@ -1151,6 +1668,27 @@
               break
             case 'urineClinical':
               this.currentUrineClinicalResult = obj.item
+              break
+            case 'smear':
+              this.currentSmearResult = obj.item
+              break
+            case 'rw':
+              this.currentRwResult = obj.item
+              break
+          }
+        } else {
+          switch (tmpAnalyzeType) {
+            case 'blood':
+              this.currentBloodResult.bloodDate = this.dateFromIso(Date.now())
+              break
+            case 'urineClinical':
+              this.currentUrineClinicalResult = this.dateFromIso(Date.now())
+              break
+            case 'smear':
+              this.currentSmearResult = this.dateFromIso(Date.now())
+              break
+            case 'rw':
+              this.currentRwResult = this.dateFromIso(Date.now())
               break
           }
         }
@@ -1230,6 +1768,30 @@
               }
             }
             break
+          case 'smear':
+            this.currentSmearResult = {
+              smearDate: '',
+              smearNumber: '',
+              smearResult: {
+                smearGonococcus: false,
+                smearLeucocytes: 0,
+                smearDiplococcus: false,
+                smearEpithelium: false,
+                smearFlora: '',
+                smearSlime: '',
+                smearTrichomonas: false,
+                smearFungus: false,
+                smearKeyCells: false
+              }
+            }
+            break
+          case 'rw':
+            this.currentRwResult = {
+              rwDate: '',
+              rwNumber: '',
+              rwResult: ''
+            }
+            break
         }
         this.addAnalyzeDialog = {
           show: false,
@@ -1245,6 +1807,12 @@
             break
           case 'urineClinical':
             tmpAnalyzeResult = this.currentUrineClinicalResult
+            break
+          case 'smear':
+            tmpAnalyzeResult = this.currentSmearResult
+            break
+          case 'rw':
+            tmpAnalyzeResult = this.currentRwResult
             break
         }
         let tmpEdit = this.addAnalyzeDialog.edit
@@ -1333,6 +1901,38 @@
                         },
                         slime: false
                       }
+                    }
+                    break
+                  case 'smear':
+                    tmpResultAnalyze = res.data.patient.smearResults.find((item) => {
+                      return this.dateFromIso(item.smearDate) === this.currentSmearResult.smearDate
+                    })
+                    this.currentEditPatient.smearResults.push(tmpResultAnalyze)
+                    this.currentSmearResult = {
+                      smearDate: '',
+                      smearNumber: '',
+                      smearResult: {
+                        smearGonococcus: false,
+                        smearLeucocytes: 0,
+                        smearDiplococcus: false,
+                        smearEpithelium: false,
+                        smearFlora: '',
+                        smearSlime: '',
+                        smearTrichomonas: false,
+                        smearFungus: false,
+                        smearKeyCells: false
+                      }
+                    }
+                    break
+                  case 'rw':
+                    tmpResultAnalyze = res.data.patient.rwResults.find((item) => {
+                      return this.dateFromIso(item.rwDate) === this.currentRwResult.rwDate
+                    })
+                    this.currentEditPatient.rwResults.push(tmpResultAnalyze)
+                    this.currentRwResult = {
+                      rwDate: '',
+                      rwNumber: '',
+                      rwResult: ''
                     }
                     break
                 }
@@ -1438,6 +2038,38 @@
                       }
                     }
                     break
+                  case 'smear':
+                    tmpResultAnalyze = res.data.patient.smearResults.find((item) => {
+                      return this.dateFromIso(item.smearDate) === this.currentSmearResult.smearDate
+                    })
+                    this.currentEditPatient.smearResults.push(tmpResultAnalyze)
+                    this.currentSmearResult = {
+                      smearDate: '',
+                      smearNumber: '',
+                      smearResult: {
+                        smearGonococcus: false,
+                        smearLeucocytes: 0,
+                        smearDiplococcus: false,
+                        smearEpithelium: false,
+                        smearFlora: '',
+                        smearSlime: '',
+                        smearTrichomonas: false,
+                        smearFungus: false,
+                        smearKeyCells: false
+                      }
+                    }
+                    break
+                  case 'rw':
+                    tmpResultAnalyze = res.data.patient.rwResults.find((item) => {
+                      return this.dateFromIso(item.rwDate) === this.currentRwResult.rwDate
+                    })
+                    this.currentEditPatient.rwResults.push(tmpResultAnalyze)
+                    this.currentRwResult = {
+                      rwDate: '',
+                      rwNumber: '',
+                      rwResult: ''
+                    }
+                    break
                 }
                 this.addAnalyzeDialog = {
                   show: false,
@@ -1487,6 +2119,14 @@
               this.currentEditPatient.urineClinicalResults = this.currentEditPatient.urineClinicalResults.filter(
                 result => result._id !== this.currentRemoveItem._id
               )
+            } else if (tmpType === 'smear') {
+              this.currentEditPatient.smearResults = this.currentEditPatient.smearResults.filter(
+                result => result._id !== this.currentRemoveItem._id
+              )
+            } else if (tmpType === 'rw') {
+              this.currentEditPatient.rwResults = this.currentEditPatient.rwResults.filter(
+                result => result._id !== this.currentRemoveItem._id
+              )
             }
             this.removeDialog.show = false
             this.snackBar.color = 'green darken-1 white--text'
@@ -1500,6 +2140,24 @@
         }).catch(err => {
           this.errorHandler(err)
         })
+      },
+      //* Проверка на необходимость мазка.
+      ifPatientNeedsSmear (patient) {
+        if (patient.hasActiveMedos || (patient.smearResults && patient.smearResults.length > 0)) {
+          let mustExams = patient.activeMedos.medosExams.mustExams
+          return mustExams.some(exam => exam.examId === 43)
+        } else {
+          return false
+        }
+      },
+      //* Проверка на необходимость RW.
+      ifPatientNeedsRw (patient) {
+        if (patient.hasActiveMedos || (patient.rwResults && patient.rwResults.length > 0)) {
+          let mustExams = patient.activeMedos.medosExams.mustExams
+          return mustExams.some(exam => exam.examId === 42)
+        } else {
+          return false
+        }
       },
       //* Запрашиваем список пациентов на медосмотре по введенным ФИО.
       getPatients () {

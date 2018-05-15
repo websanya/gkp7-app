@@ -5,8 +5,8 @@
     <v-content>
       <v-container fluid fill-height>
         <v-layout
-            justify-center
-            align-center
+          justify-center
+          align-center
         >
           <v-flex xs12>
             <h2 class="text-xs-center">Поиск пациентов</h2>
@@ -32,11 +32,11 @@
                 </v-flex>
               </v-layout>
               <v-data-table
-                  hide-headers
-                  v-if="patients.length > 0"
-                  :items="patients"
-                  hide-actions
-                  class="elevation-10 mt-4"
+                hide-headers
+                v-if="patients.length > 0"
+                :items="patients"
+                hide-actions
+                class="elevation-10 mt-4"
               >
                 <template slot="items" slot-scope="props">
                   <tr>
@@ -46,10 +46,10 @@
                     <td width="211px">
                       <v-tooltip top :color="subSystem.secondaryColor">
                         <v-btn
-                            slot="activator"
-                            @click.native="openEditHarmsDialog(props.item)"
-                            :color="subSystem.secondaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openEditHarmsDialog(props.item)"
+                          :color="subSystem.secondaryColor"
+                          icon
                         >
                           <v-icon color="white">assignment_late</v-icon>
                         </v-btn>
@@ -57,10 +57,10 @@
                       </v-tooltip>
                       <v-tooltip top :color="subSystem.primaryColor">
                         <v-btn
-                            slot="activator"
-                            @click.native="openEditParametersDialog(props.item)"
-                            :color="subSystem.primaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openEditParametersDialog(props.item)"
+                          :color="subSystem.primaryColor"
+                          icon
                         >
                           <v-icon color="white">assignment</v-icon>
                         </v-btn>
@@ -68,10 +68,10 @@
                       </v-tooltip>
                       <v-tooltip top color="green darken-2">
                         <v-btn
-                            slot="activator"
-                            @click.native="openAppointmentsDialog(props.item)"
-                            color="green darken-2"
-                            icon
+                          slot="activator"
+                          @click.native="openAppointmentsDialog(props.item)"
+                          color="green darken-2"
+                          icon
                         >
                           <v-icon color="white">assignment_turned_in</v-icon>
                         </v-btn>
@@ -101,7 +101,7 @@
       <v-card>
         <v-card-title>
           <span class="headline">Добавить вредности для пациента <br/><span
-              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
           <v-spacer>
           </v-spacer>
@@ -118,11 +118,11 @@
         <v-card-text>
           <v-container grid-list-md>
             <v-data-table
-                hide-headers
-                v-if="currentPatientHarms.length > 0"
-                :items="currentPatientHarms"
-                hide-actions
-                class="elevation-10 mt-4"
+              hide-headers
+              v-if="currentPatientHarms.length > 0"
+              :items="currentPatientHarms"
+              hide-actions
+              class="elevation-10 mt-4"
             >
               <template slot="items" slot-scope="props">
                 <tr>
@@ -130,10 +130,10 @@
                   <td width="50px">
                     <v-tooltip top color="red darken-2">
                       <v-btn
-                          slot="activator"
-                          @click.native="openRemoveDialog(props.item)"
-                          color="red darken-2"
-                          icon
+                        slot="activator"
+                        @click.native="openRemoveDialog(props.item)"
+                        color="red darken-2"
+                        icon
                       >
                         <v-icon color="white">delete</v-icon>
                       </v-btn>
@@ -165,11 +165,13 @@
         <v-card-text>
           <v-container grid-list-md>
             <v-select
-                :items="harmsForSelect"
-                label="Вредность"
-                autocomplete
-                :color="subSystem.primaryColor"
-                v-model="currentAddHarm"
+              dense
+              auto-grow
+              :items="harmsForSelect"
+              label="Вредность"
+              autocomplete
+              :color="subSystem.primaryColor"
+              v-model="currentAddHarm"
             >
             </v-select>
           </v-container>
@@ -208,7 +210,7 @@
       <v-card>
         <v-card-title>
           <span class="headline">Ввести параметры для пациента <br/><span
-              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
         </v-card-title>
         <v-card-text>
@@ -216,43 +218,43 @@
             <v-layout row wrap>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Рост"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.height"
+                  label="Рост"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.height"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Вес"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.weight"
+                  label="Вес"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.weight"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    v-if="currentPatientParameters.ad"
-                    label="AD.SYS"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.ad.sys"
+                  v-if="currentPatientParameters.ad"
+                  label="AD.SYS"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.ad.sys"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    v-if="currentPatientParameters.ad"
-                    label="AD.DIA"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.ad.dia"
+                  v-if="currentPatientParameters.ad"
+                  label="AD.DIA"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.ad.dia"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Пульс"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.pulse"
+                  label="Пульс"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.pulse"
                 >
                 </v-text-field>
               </v-flex>
@@ -260,36 +262,36 @@
             <v-layout row wrap>
               <v-flex sm12 md3>
                 <v-text-field
-                    v-if="currentPatientParameters.dynamometry"
-                    label="Динам-ия (лев)"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.dynamometry.left"
+                  v-if="currentPatientParameters.dynamometry"
+                  label="Динам-ия (лев)"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.dynamometry.left"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    v-if="currentPatientParameters.dynamometry"
-                    label="Динам-ия (прав)"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.dynamometry.right"
+                  v-if="currentPatientParameters.dynamometry"
+                  label="Динам-ия (прав)"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.dynamometry.right"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Сигареты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.cigarettes"
+                  label="Сигареты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.cigarettes"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-select
-                    :items="alcoholTypes"
-                    label="Алкоголь"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.alcohol"
+                  :items="alcoholTypes"
+                  label="Алкоголь"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.alcohol"
                 >
                 </v-select>
               </v-flex>
@@ -297,22 +299,22 @@
             <v-layout row wrap>
               <v-flex sm12 md3>
                 <v-select
-                    v-if="currentPatientParameters.skin"
-                    label="Кожа"
-                    :items="skinNorma"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.skin.norma"
+                  v-if="currentPatientParameters.skin"
+                  label="Кожа"
+                  :items="skinNorma"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.skin.norma"
                 >
                 </v-select>
               </v-flex>
               <v-flex sm12 md9>
                 <v-select
-                    v-if="currentPatientParameters.skin"
-                    label="Вид паталогии"
-                    :items="skinPathologies"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.skin.pathology"
-                    :disabled="currentPatientParameters.skin.norma"
+                  v-if="currentPatientParameters.skin"
+                  label="Вид паталогии"
+                  :items="skinPathologies"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.skin.pathology"
+                  :disabled="currentPatientParameters.skin.norma"
                 >
                 </v-select>
               </v-flex>
@@ -320,9 +322,9 @@
             <v-layout row wrap>
               <v-flex sm12 md12>
                 <v-text-field
-                    label="Анамнез"
-                    :color="subSystem.primaryColor"
-                    v-model="currentPatientParameters.comment"
+                  label="Анамнез"
+                  :color="subSystem.primaryColor"
+                  v-model="currentPatientParameters.comment"
                 >
                 </v-text-field>
               </v-flex>
@@ -347,14 +349,14 @@
           <v-flex sm12 md7>
             <span class="headline">
             Назначения для<br/><span
-                class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
           </v-flex>
           <v-flex sm12 md5>
             <v-checkbox
-                class="right"
-                label="Показывать доп. назначения"
-                v-model="showAddonAppointments"
+              class="right"
+              label="Показывать доп. назначения"
+              v-model="showAddonAppointments"
             ></v-checkbox>
           </v-flex>
         </v-card-title>
@@ -364,8 +366,8 @@
             <!-- Показ докторов -->
             <v-subheader>Доктора <span v-if="showAddonAppointments">- (обязательные)</span></v-subheader>
             <v-list-tile
-                v-for="doctor in currentEditPatient.activeMedos.medosDoctors.mustDoctors"
-                :key="doctor.doctorId"
+              v-for="doctor in currentEditPatient.activeMedos.medosDoctors.mustDoctors"
+              :key="doctor.doctorId"
             >
               <v-list-tile-content>
                 <v-list-tile-title>{{ doctor.doctorName }}</v-list-tile-title>
@@ -376,8 +378,8 @@
               <v-divider></v-divider>
               <v-subheader>Доктора <span v-if="showAddonAppointments">- (дополнительные)</span></v-subheader>
               <v-list-tile
-                  v-for="doctor in currentEditPatient.activeMedos.medosDoctors.addonDoctors"
-                  :key="doctor.doctorId"
+                v-for="doctor in currentEditPatient.activeMedos.medosDoctors.addonDoctors"
+                :key="doctor.doctorId"
               >
                 <v-list-tile-content>
                   <v-list-tile-title>{{ doctor.doctorName }}</v-list-tile-title>
@@ -390,8 +392,8 @@
             <!-- Показ обследований -->
             <v-subheader>Обследования <span v-if="showAddonAppointments">- (обязательные)</span></v-subheader>
             <v-list-tile
-                v-for="exam in currentEditPatient.activeMedos.medosExams.mustExams"
-                :key="exam.examId"
+              v-for="exam in currentEditPatient.activeMedos.medosExams.mustExams"
+              :key="exam.examId"
             >
               <v-list-tile-content>
                 <v-list-tile-title>{{ exam.examName }}</v-list-tile-title>
@@ -402,8 +404,8 @@
               <v-divider></v-divider>
               <v-subheader>Обследования <span v-if="showAddonAppointments">- (дополнительные)</span></v-subheader>
               <v-list-tile
-                  v-for="exam in currentEditPatient.activeMedos.medosExams.addonExams"
-                  :key="exam.doctorId"
+                v-for="exam in currentEditPatient.activeMedos.medosExams.addonExams"
+                :key="exam.doctorId"
               >
                 <v-list-tile-content>
                   <v-list-tile-title>{{ exam.examName }}</v-list-tile-title>
@@ -817,6 +819,11 @@
         }).then(({data}) => {
           if (data.success === true) {
             this.harms = data.harms
+            // this.harms.sort(function (a, b) {
+            //   if (a.harmName < b.harmName) return -1
+            //   if (a.harmName > b.harmName) return 1
+            //   return 0
+            // })
             this.snackBar.show = true
             this.snackBar.color = 'green darken-1 white--text'
             this.snackBar.message = 'Вредности загружены'

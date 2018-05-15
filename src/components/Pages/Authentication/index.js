@@ -20,9 +20,14 @@ export default {
 
         if (redirect) router.push(redirect)
       })
-      .catch(({response: {data}}) => {
-        context.snackbar = true
-        context.message = data.message
+      .catch(({response}) => {
+        console.log(response)
+        if (response.status === 401) {
+          context.snackbar = true
+          context.message = response.data.message
+        }
+        // context.snackbar = true
+        // context.message = data.message
       })
   },
 

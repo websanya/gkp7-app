@@ -158,11 +158,18 @@
               <!-- / Специально для офтальмологов -->
               <!-- Специально для дерматовенерологов -->
               <v-layout row wrap v-if="this.currentUser.roles.medos.doctor === 3">
-                <v-flex sm12>
+                <v-flex sm12 md6 v-if="this.sortedSmearResult.smearDate">
+                  <v-btn @click.native="makeAppointmentDialog.showSmear = !makeAppointmentDialog.showSmear"
+                         color="blue-grey darken-4"
+                         dark block>
+                    Мазок на Gn
+                  </v-btn>
+                </v-flex>
+                <v-flex sm12 md6 v-if="this.sortedRwResult.rwDate">
                   <v-btn @click.native="makeAppointmentDialog.showRw = !makeAppointmentDialog.showRw"
                          color="blue-grey darken-4"
                          dark block>
-                    RW и Мазок
+                    Кровь на Rw
                   </v-btn>
                 </v-flex>
               </v-layout>
@@ -247,6 +254,20 @@
             }}, эпител={{ sortedUrineResult.urineElements.cylinders.epithelial }}. Соли={{
             sortedUrineResult.urineElements.salts.saltsName }}, слизь={{ (sortedUrineResult.urineElements.slime) ?
             'есть' : 'нет' }}
+          </p>
+          <p v-if="sortedSmearResult.smearResult && makeAppointmentDialog.showSmear">
+            <strong>Мазок на Gn:</strong> {{ sortedSmearResult.smearDate | formatDate }}:<br/>
+            Гонококк={{ (sortedSmearResult.smearResult.smearGonococcus) ? 'Обнаружены' : 'Не обнаружены' }},
+            Лейкоциты={{ smearLeucocytes.find(item => item.value === sortedSmearResult.smearResult.smearLeucocytes).text }},
+            Диплококки={{ (sortedSmearResult.smearResult.smearDiplococcus) ? 'Обнаружены' : 'Не обнаружены' }},
+            Эпителий={{ (sortedSmearResult.smearResult.smearEpithelium) ? 'Обнаружены' : 'Не обнаружены' }},<br/>
+            Трихомонады={{ (sortedSmearResult.smearResult.smearTrichomonas) ? 'Обнаружены' : 'Не обнаружены' }},
+            Дрожжеподобные грибы={{ (sortedSmearResult.smearResult.smearFungus) ? 'Обнаружены' : 'Не обнаружены' }},
+            Ключевые клетки={{ (sortedSmearResult.smearResult.smearKeyCells) ? 'Обнаружены' : 'Не обнаружены' }}
+          </p>
+          <p v-if="sortedRwResult.rwResult && makeAppointmentDialog.showRw">
+            <strong>Кровь на RW:</strong> {{ sortedRwResult.rwDate | formatDate }}:<br/>
+            Результат={{ rwTypes.find(item => item.value === sortedRwResult.rwResult).text }}
           </p>
           <v-container grid-list-md>
             <v-layout row wrap v-if="currentUserDoctor.id === 4">
@@ -878,6 +899,10 @@
         sortedBloodResult: {},
         //* Самый последний анализ мочи.
         sortedUrineResult: {},
+        //* Самый последний мазок.
+        sortedSmearResult: {},
+        //* Самый последний анализ RW.
+        sortedRwResult: {},
         //* Самая последняя флюорография.
         sortedRgResult: {},
         //* Диалог приема врача.
@@ -886,6 +911,8 @@
           showBlood: false,
           showUrine: false,
           showInfo: false,
+          showSmear: false,
+          showRw: false,
           edit: false
         },
         //* Диалоги обследований (открываются кнопками у офтальмолога).
@@ -914,7 +941,7 @@
         },
         //* Массив обследований, которые выводят в годности.
         examsForConclusions: [1, 19, 20, 21, 32, 34, 38, 46],
-        //* Словарь годностей.
+        //* Справочник годностей.
         doctorConclusions: [
           'Годен',
           'в очках',
@@ -928,7 +955,7 @@
           'без световой среды',
           'Не годен'
         ],
-        //* Словарь выявляемостей.
+        //* Справочник выявляемостей.
         doctorDetectabilities: [
           {
             value: true,
@@ -939,7 +966,7 @@
             text: 'Повторный'
           }
         ],
-        //* Словарь полей зрения.
+        //* Справочник полей зрения.
         fieldResults: [
           {
             value: 1,
@@ -958,7 +985,7 @@
             text: 'Гемианопсия'
           }
         ],
-        //* Словарь цветоощущений.
+        //* Справочник цветоощущений.
         colorBlindnessResults: [
           {
             value: 1,
@@ -971,6 +998,64 @@
           {
             value: 3,
             text: 'Трихромазия'
+          }
+        ],
+        //* Справочник мазков.
+        smearLeucocytes: [
+          {
+            value: 1,
+            text: '1 - Единичные'
+          },
+          {
+            value: 2,
+            text: '2 - до 25'
+          },
+          {
+            value: 3,
+            text: '3 - до 50'
+          },
+          {
+            value: 4,
+            text: '4 - до 100'
+          },
+          {
+            value: 5,
+            text: '5 - выше 100'
+          }
+        ],
+        //* Справочник кодов на RW.
+        rwTypes: [
+          {
+            value: 1,
+            text: '1 - Отрицительный'
+          },
+          {
+            value: 2,
+            text: '2 - Положительный X'
+          },
+          {
+            value: 3,
+            text: '3 - Положительный XX'
+          },
+          {
+            value: 4,
+            text: '4 - Положительный XXX'
+          },
+          {
+            value: 5,
+            text: '5 - Положительный XXXX'
+          },
+          {
+            value: 6,
+            text: '6 - Гемолиз'
+          },
+          {
+            value: 7,
+            text: '7 - Хилезная'
+          },
+          {
+            value: 8,
+            text: '8 - Брак'
           }
         ],
         //* Все, что связано с snackBar, который всплывает во время ошибок.
@@ -1028,6 +1113,18 @@
             return new Date(b.urineDate) - new Date(a.urineDate)
           })
           this.sortedUrineResult = sortedUrine[0]
+          if (this.currentEditPatient.smearResults.length > 0) {
+            let sortedSmear = this.currentEditPatient.smearResults.sort((a, b) => {
+              return new Date(b.smearDate) - new Date(a.smearDate)
+            })
+            this.sortedSmearResult = sortedSmear[0]
+          }
+          if (this.currentEditPatient.rwResults.length > 0) {
+            let sortedRw = this.currentEditPatient.rwResults.sort((a, b) => {
+              return new Date(b.rwDate) - new Date(a.rwDate)
+            })
+            this.sortedRwResult = sortedRw[0]
+          }
           let sortedRg = this.currentEditPatient.rgResults.sort((a, b) => {
             return new Date(b.rgDate) - new Date(a.rgDate)
           })
@@ -1045,6 +1142,8 @@
                 show: true,
                 showBlood: false,
                 showUrine: false,
+                showSmear: false,
+                showRw: false,
                 showInfo: true,
                 edit: true
               }
@@ -1068,6 +1167,8 @@
                 show: true,
                 showBlood: false,
                 showUrine: false,
+                showSmear: false,
+                showRw: false,
                 showInfo: true,
                 edit: false
               }
@@ -1096,6 +1197,8 @@
           show: false,
           showBlood: false,
           showUrine: false,
+          showSmear: false,
+          showRw: false,
           showInfo: false,
           edit: false
         }
@@ -1127,6 +1230,8 @@
                     show: false,
                     showBlood: false,
                     showUrine: false,
+                    showSmear: false,
+                    showRw: false,
                     showInfo: false,
                     edit: false
                   }
@@ -1170,6 +1275,8 @@
                     show: false,
                     showBlood: false,
                     showUrine: false,
+                    showSmear: false,
+                    showRw: false,
                     showInfo: false,
                     edit: false
                   }
@@ -1213,6 +1320,8 @@
                   show: false,
                   showBlood: false,
                   showUrine: false,
+                  showSmear: false,
+                  showRw: false,
                   showInfo: false,
                   edit: false
                 }
@@ -1242,6 +1351,8 @@
                   show: false,
                   showBlood: false,
                   showUrine: false,
+                  showSmear: false,
+                  showRw: false,
                   showInfo: false,
                   edit: false
                 }
@@ -1283,6 +1394,8 @@
               show: false,
               showBlood: false,
               showUrine: false,
+              showSmear: false,
+              showRw: false,
               showInfo: false,
               edit: false
             }
@@ -1577,6 +1690,24 @@
         let finalDoctorsToCheck = mustDoctors.filter(doctor => doctor.doctorId !== 1)
         let doctorResults = this.currentEditPatient.activeMedos.medosDoctorResults
         return finalDoctorsToCheck.every(doctor => doctorResults.some(result => result.doctorId === doctor.doctorId))
+      },
+      //* Проверка на необходимость мазка.
+      ifPatientNeedsSmear (patient) {
+        if (patient.smearResults && patient.smearResults.length > 0) {
+          let mustExams = patient.activeMedos.medosExams.mustExams
+          return mustExams.some(exam => exam.examId === 43)
+        } else {
+          return false
+        }
+      },
+      //* Проверка на необходимость RW.
+      ifPatientNeedsRw (patient) {
+        if (patient.rwResults && patient.rwResults.length > 0) {
+          let mustExams = patient.activeMedos.medosExams.mustExams
+          return mustExams.some(exam => exam.examId === 42)
+        } else {
+          return false
+        }
       },
       //* Перевод даты из ISO формата.
       dateFromIso (inputDate) {

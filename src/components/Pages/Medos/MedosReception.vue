@@ -49,7 +49,7 @@
                     <td width="72px">
                       <v-icon
                           v-if="(props.item.hasActiveMedos)"
-                          :color="subSystem.secondaryColor">
+                          :color="subSystem.primaryColor">
                         assignment_ind
                       </v-icon>
                     </td>
