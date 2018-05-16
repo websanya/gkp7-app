@@ -1682,13 +1682,13 @@
               this.currentBloodResult.bloodDate = this.dateFromIso(Date.now())
               break
             case 'urineClinical':
-              this.currentUrineClinicalResult = this.dateFromIso(Date.now())
+              this.currentUrineClinicalResult.urineDate = this.dateFromIso(Date.now())
               break
             case 'smear':
-              this.currentSmearResult = this.dateFromIso(Date.now())
+              this.currentSmearResult.smearDate = this.dateFromIso(Date.now())
               break
             case 'rw':
-              this.currentRwResult = this.dateFromIso(Date.now())
+              this.currentRwResult.rwDate = this.dateFromIso(Date.now())
               break
           }
         }
