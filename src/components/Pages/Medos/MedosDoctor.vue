@@ -1068,7 +1068,8 @@
         //* Цвета для данной подсистемы.
         subSystem: {
           primaryColor: 'purple darken-3',
-          secondaryColor: 'orange darken-3'
+          secondaryColor: 'orange darken-3',
+          deleteColor: 'red'
         }
       }
     },

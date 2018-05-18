@@ -345,14 +345,15 @@
     <!-- Диалог бегунка с назначениями -->
     <v-dialog v-model="appointmentsDialog.show" persistent max-width="800px">
       <v-card>
-        <v-card-title>
+        <v-card-title v-if="currentEditPatient.activeMedos && currentEditPatient.activeMedos.medosDoctors && currentEditPatient.activeMedos.medosExams">
           <v-flex sm12 md7>
             <span class="headline">
             Назначения для<br/><span
               class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
           </v-flex>
-          <v-flex sm12 md5>
+          <v-flex sm12 md5
+                  v-if="currentEditPatient.activeMedos.medosDoctors.addonDoctors.length > 0 || currentEditPatient.activeMedos.medosExams.addonExams.length > 0">
             <v-checkbox
               class="right"
               label="Показывать доп. назначения"
@@ -362,58 +363,89 @@
         </v-card-title>
         <v-card-text ref="print"
                      v-if="currentEditPatient.activeMedos && currentEditPatient.activeMedos.medosDoctors && currentEditPatient.activeMedos.medosExams">
-          <v-list two-line subheader>
+          <div class="print-blood">
+            <h4>Гематологический анализ крови — 108 кабинет</h4>
+            <h5>{{ currentEditPatient.fio }} (Цех: {{ currentEditPatient.activeJob.jobDivision }}, Таб: {{
+              currentEditPatient.activeJob.jobPersonnelNumber }})</h5>
+            <br>
+            <p>
+              Нв_______ Цр_______ Эр_______ Тр_______ L_______<br>
+              Б_______ Эо_______ П_______ С_______ Лф_______ М_______ СОЭ_______<br>
+              Сахар_______ Холестерин_______<br>
+            </p>
+          </div>
+          <br>
+          <hr>
+          <br>
+          <br>
+          <div class="print-302">
+            <div class="print-302-header">
+              <h4>{{ currentEditPatient.fio }}</h4>
+              <h5>Согласно пр. №302</h5>
+            </div>
+            <br>
             <!-- Показ докторов -->
-            <v-subheader>Доктора <span v-if="showAddonAppointments">- (обязательные)</span></v-subheader>
-            <v-list-tile
-              v-for="doctor in currentEditPatient.activeMedos.medosDoctors.mustDoctors"
-              :key="doctor.doctorId"
-            >
-              <v-list-tile-content>
-                <v-list-tile-title>{{ doctor.doctorName }}</v-list-tile-title>
-                <v-list-tile-sub-title>Кабинет 110</v-list-tile-sub-title>
-              </v-list-tile-content>
-            </v-list-tile>
+            <h4 style="margin: 0">Специалисты <span v-if="showAddonAppointments">- (обязательные)</span></h4>
+            <hr class="print-302-subheading">
+            <p>
+              <span>101 кабинет — Прививка</span><br>
+              <span>108 кабинет — Анализ крови</span><br>
+              <span>211 кабинет — Анализ мочи</span><br>
+              <span
+                v-for="doctor in currentEditPatient.activeMedos.medosDoctors.mustDoctors"
+                :key="doctor.doctorId">
+              {{ doctor.doctorRoom }} — {{ doctor.doctorName }}
+              <br>
+            </span>
+              <span>202 кабинет — ЭКГ</span><br>
+              <span>Центр здоровья — Нарколог</span><br>
+              <span>Центр здоровья — Психиатр</span><br>
+            </p>
             <div v-if="showAddonAppointments">
-              <v-divider></v-divider>
-              <v-subheader>Доктора <span v-if="showAddonAppointments">- (дополнительные)</span></v-subheader>
-              <v-list-tile
+              <h4>Врачи <span v-if="showAddonAppointments">- (дополнительные)</span></h4>
+              <hr class="print-302-subheading">
+              <p>
+              <span
                 v-for="doctor in currentEditPatient.activeMedos.medosDoctors.addonDoctors"
-                :key="doctor.doctorId"
-              >
-                <v-list-tile-content>
-                  <v-list-tile-title>{{ doctor.doctorName }}</v-list-tile-title>
-                  <v-list-tile-sub-title>Кабинет 110</v-list-tile-sub-title>
-                </v-list-tile-content>
-              </v-list-tile>
+                :key="doctor.doctorId">
+              {{ doctor.doctorName }} — {{ doctor.doctorName }}
+              <br>
+            </span>
+              </p>
             </div>
-            <v-divider>
-            </v-divider>
             <!-- Показ обследований -->
-            <v-subheader>Обследования <span v-if="showAddonAppointments">- (обязательные)</span></v-subheader>
-            <v-list-tile
+            <h4>Обследования <span v-if="showAddonAppointments">- (обязательные)</span></h4>
+            <hr class="print-302-subheading">
+            <p>
+            <span
               v-for="exam in currentEditPatient.activeMedos.medosExams.mustExams"
-              :key="exam.examId"
-            >
-              <v-list-tile-content>
-                <v-list-tile-title>{{ exam.examName }}</v-list-tile-title>
-                <v-list-tile-sub-title>Кабинет 110</v-list-tile-sub-title>
-              </v-list-tile-content>
-            </v-list-tile>
+              :key="exam.examId">
+              {{ exam.examName }}{{ (exam.examNote) ? ` — ${exam.examNote}` : '' }};
+            </span>
+            </p>
             <div v-if="showAddonAppointments">
-              <v-divider></v-divider>
-              <v-subheader>Обследования <span v-if="showAddonAppointments">- (дополнительные)</span></v-subheader>
-              <v-list-tile
+              <h4>Обследования <span v-if="showAddonAppointments">- (дополнительные)</span></h4>
+              <hr class="print-302-subheading">
+              <p>
+              <span
                 v-for="exam in currentEditPatient.activeMedos.medosExams.addonExams"
-                :key="exam.doctorId"
-              >
-                <v-list-tile-content>
-                  <v-list-tile-title>{{ exam.examName }}</v-list-tile-title>
-                  <v-list-tile-sub-title>Кабинет 110</v-list-tile-sub-title>
-                </v-list-tile-content>
-              </v-list-tile>
+                :key="exam.examId">
+              {{ exam.examName }}{{ (exam.examNote) ? ` — ${exam.examNote}` : '' }};
+            </span>
+              </p>
             </div>
-          </v-list>
+          </div>
+          <br>
+          <hr>
+          <br>
+          <br>
+          <div class="print-urine">
+            <h4>Общий анализ мочи — 211 кабинет</h4>
+            <h5>{{ currentEditPatient.fio }} (Цех: {{ currentEditPatient.activeJob.jobDivision }}, Таб: {{
+              currentEditPatient.activeJob.jobPersonnelNumber }})</h5>
+          </div>
+          <br>
+          <br>
         </v-card-text>
         <v-card-actions>
           <v-spacer>
@@ -617,7 +649,7 @@
         //* Добавляем всем осмотр терапевта.
         allTheMustDoctors.push({
           doctorId: 1,
-          doctorName: 'Терапевт',
+          doctorName: 'Цеховый терапевт',
           doctorRoom: '104/105 кабинет'
         })
         //* Отбираем только уникальные назначения.
@@ -648,9 +680,24 @@
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
         }).then(res => {
           if (res.data.success) {
-            this.currentEditPatient = {}
+            this.patients.find(patient => patient._id === this.currentEditPatient._id).medosHarms = this.currentMedos.medosHarms
+            this.patients.find(patient => patient._id === this.currentEditPatient._id).medosDoctors = {
+              mustDoctors: uniqueMustDoctors,
+              addonDoctors: uniqueAddonDoctors
+            }
+            this.patients.find(patient => patient._id === this.currentEditPatient._id).medosExams = {
+              mustExams: uniqueMustExams,
+              addonExams: uniqueAddonExams
+            }
+            this.currentEditPatient.activeMedos.medosDoctos = {
+              mustDoctors: uniqueMustDoctors,
+              addonDoctors: uniqueAddonDoctors
+            }
+            this.currentEditPatient.activeMedos.medosExams = {
+              mustExams: uniqueMustExams,
+              addonExams: uniqueAddonExams
+            }
             this.currentPatientHarms = {}
-            this.currentMedos = {}
             this.editHarmsDialog.show = false
             this.snackBar.color = 'green darken-1 white--text'
             this.snackBar.timeout = 2000
@@ -819,11 +866,6 @@
         }).then(({data}) => {
           if (data.success === true) {
             this.harms = data.harms
-            // this.harms.sort(function (a, b) {
-            //   if (a.harmName < b.harmName) return -1
-            //   if (a.harmName > b.harmName) return 1
-            //   return 0
-            // })
             this.snackBar.show = true
             this.snackBar.color = 'green darken-1 white--text'
             this.snackBar.message = 'Вредности загружены'
@@ -910,7 +952,7 @@
   }
 </script>
 
-<style lang="scss">
+<style lang="scss" ref="print">
   .router-link-exact-active {
     background-color: #6a1b9a;
     color: white;
@@ -920,5 +962,21 @@
   .theme--light .input-group input:disabled::placeholder,
   .theme--light .input-group input:disabled {
     color: rgba(245, 127, 23, 0.7) !important;
+  }
+
+  .print-blood,
+  .print-urine {
+    text-align: center
+  }
+
+  .print-302 {
+    max-width: 300px;
+    margin: auto;
+    &-header {
+      text-align: center;
+    }
+    &-subheading {
+      margin-bottom: 0.5rem;
+    }
   }
 </style>
