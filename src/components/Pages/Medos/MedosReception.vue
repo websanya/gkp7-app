@@ -13,17 +13,17 @@
             <v-container grid-list-md>
               <v-layout row wrap>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Фамилия"
+                  <v-text-field @keyup.enter="getPatients" :color="subSystem.primaryColor" label="Фамилия"
                                 v-model="patientQuery.lastName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Имя"
+                  <v-text-field @keyup.enter="getPatients" :color="subSystem.primaryColor" label="Имя"
                                 v-model="patientQuery.firstName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Отчество"
+                  <v-text-field @keyup.enter="getPatients" :color="subSystem.primaryColor" label="Отчество"
                                 v-model="patientQuery.middleName" box>
                   </v-text-field>
                 </v-flex>
@@ -38,7 +38,13 @@
                 </v-flex>
               </v-layout>
               <v-data-table
-                hide-headers
+                :headers="[
+                  {text:'Медосмотр', sortable: false},
+                  {text:'ФИО', sortable: false},
+                  {text:'Дата рождения', sortable: false},
+                  {text:'Пол', sortable: false},
+                  {text:'Действия', sortable: false}
+                ]"
                 v-if="patients.length > 0"
                 :items="patients"
                 hide-actions
@@ -431,6 +437,10 @@
         patients: [],
         //* Все предприятия, которые есть в системе на момент открытия.
         companies: [],
+        //* Только предприятия селекта.
+        companiesForSelect: [],
+        //* Только цеха в выбранном предприятии.
+        currentCompanyDivisions: [],
         //* Пациент, которого мы редактируем.
         currentEditPatient: {
           fio: '',
@@ -456,29 +466,25 @@
             }
           }
         },
-        //* Все, что связано с диалогом добавления/редактирования пациента.
+        //* Диалоговое окно добавления/редактирования пациента.
         editPatientDialog: {
           show: false,
           edit: false
         },
-        //* Все, что связано с диалогом добавления/редактирования места работы.
+        //* Диалоговое окно добавления/редактирования места работы.
         editJobDialog: {
           show: false,
           edit: false
         },
-        //* Все, что связано с диалогом поставноки на проф. осмотр.
+        //* Диалоговое окно поставноки на проф. осмотр.
         editMedosDialog: {
           show: false
         },
-        //* Все, что связано с диалогом удаления пациента.
+        //* Диалоговое окно удаления пациента.
         removeDialog: {
           show: false,
           remove: ''
         },
-        //* Только предприятия селекта.
-        companiesForSelect: [],
-        //* Только цеха в выбранном предприятии.
-        currentCompanyDivisions: [],
         //* Все типы мед. осмотра.
         medosTypes: [
           {
@@ -522,7 +528,10 @@
           primaryColor: 'light-blue darken-4',
           secondaryColor: 'yellow darken-4',
           deleteColor: 'red',
-          deleteText: 'red--text'
+          deleteText: 'red--text',
+          snackBarRed: 'red darken-2 white--text',
+          snackBarYellow: 'yellow accent-3 black--text',
+          snackBarGreen: 'green darken-1 white--text'
         }
       }
     },
@@ -561,10 +570,10 @@
           }).then(({data}) => {
             if (data.success) {
               this.editPatientDialog.show = false
-              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.color = this.subSystem.snackBarGreen
               this.snackBar.timeout = 2000
             } else {
-              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.color = this.subSystem.snackBarRed
               this.snackBar.timeout = 5000
             }
             this.snackBar.message = data.message
@@ -580,10 +589,10 @@
             headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
           }).then(({data}) => {
             if (data.success) {
-              this.snackBar.color = 'green darken-1 white--text'
+              this.snackBar.color = this.subSystem.snackBarGreen
               this.snackBar.timeout = 2000
             } else {
-              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.color = this.subSystem.snackBarRed
               this.snackBar.timeout = 5000
             }
             this.snackBar.message = data.message
@@ -650,10 +659,10 @@
                   if (data.success) {
                     //* Удаляем пациента из списка на фронтенде.
                     this.patients.splice(i, 1)
-                    this.snackBar.color = 'green darken-1 white--text'
+                    this.snackBar.color = this.subSystem.snackBarGreen
                     this.snackBar.timeout = 1000
                   } else {
-                    this.snackBar.color = 'red darken-2 white--text'
+                    this.snackBar.color = this.subSystem.snackBarRed
                     this.snackBar.timeout = 5000
                   }
                   this.snackBar.show = true
@@ -676,10 +685,10 @@
                     data.patient.dateBirth = this.dateFromIso(data.patient.dateBirth)
                     this.$set(this.patients, i, data.patient)
                     this.currentEditPatient = {}
-                    this.snackBar.color = 'green darken-1 white--text'
+                    this.snackBar.color = this.subSystem.snackBarGreen
                     this.snackBar.timeout = 1000
                   } else {
-                    this.snackBar.color = 'red darken-2 white--text'
+                    this.snackBar.color = this.subSystem.snackBarRed
                     this.snackBar.timeout = 5000
                   }
                   this.snackBar.show = true
@@ -695,7 +704,7 @@
             break
           default:
             this.snackBar.show = true
-            this.snackBar.color = 'red darken-2 white--text'
+            this.snackBar.color = this.subSystem.snackBarRed
             this.snackBar.message = 'Не знаю, что удалять.'
             break
         }
@@ -708,7 +717,7 @@
       openRegisterMedicalExamination (item) {
         if (item.activeJob === undefined) {
           this.snackBar.show = true
-          this.snackBar.color = 'red darken-2 white--text'
+          this.snackBar.color = this.subSystem.snackBarRed
           this.snackBar.message = 'У пациента не указано место работы'
           this.snackBar.timeout = 5000
         } else {
@@ -744,10 +753,10 @@
                 this.editMedosDialog.show = false
               }
             })
-            this.snackBar.color = 'green darken-1 white--text'
+            this.snackBar.color = this.subSystem.snackBarGreen
             this.snackBar.timeout = 2000
           } else {
-            this.snackBar.color = 'red darken-2 white--text'
+            this.snackBar.color = this.subSystem.snackBarRed
             this.snackBar.timeout = 5000
           }
           this.snackBar.message = data.message
@@ -795,7 +804,7 @@
           } else {
             this.patients = []
             this.snackBar.show = true
-            this.snackBar.color = 'yellow accent-3 black--text'
+            this.snackBar.color = this.subSystem.snackBarYellow
             this.snackBar.message = data.message
           }
         }).catch(err => {
@@ -810,7 +819,7 @@
           if (data.success === true) {
             this.companies = data.companies
             this.snackBar.show = true
-            this.snackBar.color = 'green darken-1 white--text'
+            this.snackBar.color = this.subSystem.snackBarGreen
             this.snackBar.message = 'Компании загружены'
             this.snackBar.timeout = 1000
             //* Выберем только для предприятия для селекта.
@@ -822,7 +831,7 @@
             )
           } else {
             this.snackBar.show = true
-            this.snackBar.color = 'red darken-2 white--text'
+            this.snackBar.color = this.subSystem.snackBarRed
             this.snackBar.message = 'Компаний не найдено'
             this.snackBar.timeout = 5000
           }
@@ -861,7 +870,7 @@
       errorHandler (err) {
         const status = err.response.status
         this.snackBar.show = true
-        this.snackBar.color = 'red darken-2 white--text'
+        this.snackBar.color = this.subSystem.snackBarRed
         if (status === 401) {
           this.snackBar.message = 'Вы не авторизованы.'
         }
