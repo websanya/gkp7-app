@@ -7,6 +7,7 @@ import MedosReception from '@/components/pages/Medos/MedosReception'
 import MedosPremedical from '@/components/pages/Medos/MedosPremedical'
 import MedosDoctor from '@/components/pages/Medos/MedosDoctor'
 import MedosExam from '@/components/pages/Medos/MedosExam'
+import MedosArchive from '@/components/pages/Medos/MedosArchive'
 import Radiography from '@/components/pages/Radiography/Radiography'
 import Laboratory from '@/components/pages/Laboratory/Laboratory'
 import Vaccination from '@/components/pages/Vaccination/Vaccination'
@@ -48,6 +49,11 @@ const router = new Router({
       path: '/medos/exam',
       name: 'MedosExam',
       component: MedosExam
+    },
+    {
+      path: '/medos/archive',
+      name: 'MedosArchive',
+      component: MedosArchive
     },
     {
       path: '/radiography',
