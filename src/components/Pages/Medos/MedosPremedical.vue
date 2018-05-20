@@ -406,8 +406,6 @@
               <br>
             </span>
               <span>202 кабинет — ЭКГ</span><br>
-              <span>Центр здоровья — Нарколог</span><br>
-              <span>Центр здоровья — Психиатр</span><br>
             </p>
             <div v-if="showAddonAppointments">
               <h4>Врачи <span v-if="showAddonAppointments">- (дополнительные)</span></h4>
@@ -426,6 +424,7 @@
             <hr class="print-302-subheading">
             <p>
             <span
+              v-if="exam.examId !== 47"
               v-for="exam in currentEditPatient.activeMedos.medosExams.mustExams"
               :key="exam.examId">
               {{ exam.examName }}{{ (exam.examNote) ? ` — ${exam.examNote}` : '' }};
@@ -730,7 +729,23 @@
             examRoom: '416 кабинет'
           })
         }
-        //* Добавляем всем осмотр терапевта.
+        //* Добавляем всем ЭКГ
+        allTheMustExams.push({
+          examId: 47,
+          examName: 'ЭКГ',
+          examRoom: '202 кабинет'
+        })
+        //* Добавляем всем осмотр обязательных врачей.
+        allTheMustDoctors.push({
+          doctorId: 13,
+          doctorName: 'Психиатр',
+          doctorRoom: 'Центр здоровья'
+        })
+        allTheMustDoctors.push({
+          doctorId: 14,
+          doctorName: 'Нарколог',
+          doctorRoom: 'Центр здоровья'
+        })
         allTheMustDoctors.push({
           doctorId: 1,
           doctorName: 'Цеховый терапевт',

@@ -469,6 +469,10 @@
       },
       yesEditRgDialog () {
         let tmpRgResult = this.currentRgResult
+        tmpRgResult.updatedBy = this.currentUser._id
+        if (this.currentEditPatient.activeMedos._id) {
+          tmpRgResult.medosId = this.currentEditPatient.activeMedos._id
+        }
         if (this.editRgDialog.edit) {
           //* Редактируем снимок пациента.
           Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/${tmpRgResult._id}`, {

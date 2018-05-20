@@ -55,7 +55,7 @@
                       <v-tooltip v-if="checkPatientEcg()" top color="red darken-4">
                         <v-btn
                           slot="activator"
-                          @click.native="openExaminationDialog({patient: props.item, exam: 46})"
+                          @click.native="openExaminationDialog({patient: props.item, exam: 47})"
                           color="red darken-4"
                           icon
                         >
@@ -114,11 +114,11 @@
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
-            <v-layout v-if="examResultDialog.exam === 46 || examResultDialog.exam === 1" row wrap>
-              <v-flex v-if="examResultDialog.exam === 46" sm12>
+            <v-layout v-if="examResultDialog.exam === 47 || examResultDialog.exam === 1" row wrap>
+              <v-flex v-if="examResultDialog.exam === 47" sm12>
                 <h2>ЭКГ</h2>
               </v-flex>
-              <v-flex v-if="examResultDialog.exam === 46" sm12>
+              <v-flex v-if="examResultDialog.exam === 47" sm12>
                 <v-checkbox
                   label="Пациент прошел ЭКГ"
                   v-model="currentExamResult.examResult"
@@ -409,6 +409,7 @@
       },
       yesExaminationDialog () {
         let tmpExamResult = this.currentExamResult
+        tmpExamResult.updatedBy = this.currentUser._id
         if (this.examResultDialog.edit) {
           Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/examResult/${tmpExamResult._id}`, {
             examResult: tmpExamResult

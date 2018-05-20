@@ -1423,7 +1423,7 @@
             text: '5 - выше 100'
           }
         ],
-        //* Справочник кодов на RW.
+        //* Справочник крови на RW.
         rwTypes: [
           {
             value: 1,
@@ -1669,6 +1669,10 @@
           case 'rw':
             tmpAnalyzeResult = this.currentRwResult
             break
+        }
+        tmpAnalyzeResult.updatedBy = this.currentUser._id
+        if (this.currentEditPatient.activeMedos._id) {
+          tmpAnalyzeResult.medosId = this.currentEditPatient.activeMedos._id
         }
         let tmpEdit = this.addAnalyzeDialog.edit
         switch (tmpEdit) {

@@ -34,12 +34,12 @@
               </v-layout>
               <v-data-table
                 :headers="[
-                    {text:'ФИО', sortable: false},
-                    {text:'Осмотр', sortable: false},
-                    {text: 'Дата рождения', sortable: false},
-                    {text: 'Пол', sortable: false},
-                    {text: 'Действия', sortable: false}
-                  ]"
+                  {text:'ФИО', sortable: false},
+                  {text:'Дата рождения', sortable: false},
+                  {text:'Пол', sortable: false},
+                  {text:'Тип осмотра', sortable: false},
+                  {text:'Действия', sortable: false}
+                ]"
                 v-if="patients.length > 0"
                 :items="patients"
                 hide-actions
@@ -48,9 +48,9 @@
                 <template slot="items" slot-scope="props">
                   <tr>
                     <td>{{ props.item.fio }}</td>
-                    <td>{{ props.item.activeMedos.medosType.typeId }}</td>
                     <td>{{ props.item.dateBirth }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
+                    <td>{{ props.item.activeMedos.medosType }}</td>
                     <td>
                       <v-tooltip top :color="subSystem.primaryColor">
                         <v-btn
@@ -179,9 +179,23 @@
                         v-if="this.currentUser.roles.medos.doctor === 1 || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser">
                 <v-flex sm12 md4>
                   <v-btn @click.native="openConclusionsDialog()"
-                         :color="(ifAllDoctorsComplete() && ifAllExamsComplete) ? 'green darken-2' : 'light-blue darken-4'"
+                         :color="(ifAllDoctorsComplete() && ifAllExamsComplete()) ? 'green darken-2' : 'light-blue darken-4'"
                          dark block>
-                    Годности
+                    Заключения
+                  </v-btn>
+                </v-flex>
+                <v-flex sm12 md4 v-if="this.sortedSmearResult.smearDate">
+                  <v-btn @click.native="makeAppointmentDialog.showSmear = !makeAppointmentDialog.showSmear"
+                         color="blue-grey darken-4"
+                         dark block>
+                    Мазок на Gn
+                  </v-btn>
+                </v-flex>
+                <v-flex sm12 md4 v-if="this.sortedRwResult.rwDate">
+                  <v-btn @click.native="makeAppointmentDialog.showRw = !makeAppointmentDialog.showRw"
+                         color="blue-grey darken-4"
+                         dark block>
+                    Кровь на Rw
                   </v-btn>
                 </v-flex>
               </v-layout>
@@ -195,10 +209,9 @@
           </p>
           <p
             v-if="currentEditPatient.activeMedos.medosJob && currentEditPatient.activeMedos.medosParameters && makeAppointmentDialog.showInfo">
-            <strong>Цех:</strong> {{ currentEditPatient.activeMedos.medosJob.jobDivision.jobDivisionName }},
+            <strong>Цех:</strong> {{ currentEditPatient.activeMedos.medosJob.jobDivision }},
             <strong>табельный номер:</strong> {{ currentEditPatient.activeMedos.medosJob.jobPersonnelNumber }}<br/>
-            <strong>Участок:</strong> {{ currentEditPatient.activeMedos.medosJob.jobDepartment.jobDepartmentName }},
-            <strong>профессия:</strong> {{ currentEditPatient.activeMedos.medosJob.jobName }}<br/>
+            <strong>Профессия:</strong> {{ currentEditPatient.activeMedos.medosJob.jobName }}<br/>
             <strong>Проффакторы:</strong>
             <span v-if="currentEditPatient.activeMedos.medosHarms"
                   v-for="harm in currentEditPatient.activeMedos.medosHarms" :key="harm.harmId">
@@ -207,8 +220,11 @@
               <strong>Анамнез:</strong> {{ currentEditPatient.activeMedos.medosParameters.comment }}<br/>
             </span>
             <span v-if="sortedRgResult">
-              <strong>Флюорография:</strong> {{ sortedRgResult.rgDate | formatDate }}, {{
-            sortedRgResult.rgLocation.rgLocationComment }}
+              <strong>Флюорография:</strong> <u>{{ sortedRgResult.rgDate | formatDate }}</u><br>
+              {{ (sortedRgResult.rgLocation.rgLocationType) ? 'ЛПУ=МБУЗ ГКБ №6, поликлиника 2' :
+              `ЛПУ=${sortedRgResult.rgLocation.rgLocationComment}` }}<br>
+              {{ (sortedRgResult.rgResult.rgResultType) ? 'Заключение=норма'
+              : `Заключение=${sortedRgResult.rgResult.rgResultComment}` }}
             </span>
             <span v-if="!sortedRgResult">
               <strong>Флюорография: <span class="red--text">отсутствует</span></strong>
@@ -224,50 +240,120 @@
                   v-for="exam in currentEditPatient.activeMedos.medosExams.mustExams" :key="exam.examId">
               {{ exam.examName }}; </span><br/>
           </p>
-          <p v-if="sortedBloodResult.bloodResult && makeAppointmentDialog.showBlood">
-            <strong>Клинический анализ крови:</strong> {{ sortedBloodResult.bloodDate | formatDate }}:<br/>
-            Hb={{ sortedBloodResult.bloodResult.hemoglobin }}, L={{ sortedBloodResult.bloodResult.leucocytes }}, СОЭ={{
-            sortedBloodResult.bloodResult.esr }}, Баз={{ sortedBloodResult.bloodResult.basophils }}, Миел={{
-            sortedBloodResult.bloodResult.myelocytes }}, Юные={{ sortedBloodResult.bloodResult.young }}, Пал={{
-            sortedBloodResult.bloodResult.sticks }}, Сегменты={{ sortedBloodResult.bloodResult.segments }}, Лимф={{
-            sortedBloodResult.bloodResult.lymphocytes }}, Моно={{ sortedBloodResult.bloodResult.monocytes }}, Норм={{
-            sortedBloodResult.bloodResult.normoblasts }}, ТЗН={{ sortedBloodResult.bloodResult.tng }}</p>
-          <p v-if="sortedBloodResult.bloodResult && makeAppointmentDialog.showBlood">
-            <strong>Биохимический анализ крови:</strong> {{ sortedBloodResult.bloodDate | formatDate }}:<br/>
-            Сахар={{ sortedBloodResult.bloodResult.sugar }}, Холистерин={{ sortedBloodResult.bloodResult.cholesterol }},
-            Протромбин={{ sortedBloodResult.bloodResult.prothrombin }}, МНО={{ sortedBloodResult.bloodResult.inr }}
-          </p>
-          <p v-if="sortedUrineResult.urineGeneral && makeAppointmentDialog.showUrine">
-            <strong>Клинический анализ мочи:</strong> {{ sortedUrineResult.urineDate | formatDate }}:<br/>
-            Цвет={{ sortedUrineResult.urineGeneral.color.colorName }}, Реакция={{
-            sortedUrineResult.urineGeneral.reaction.reactionName }}, Плотность={{ sortedUrineResult.urineGeneral.density
-            }}, Прозрачность={{ (sortedUrineResult.urineGeneral.transparency) ? 'прозрачная' : 'мутная' }}, Белок={{
-            sortedUrineResult.urineGeneral.protein }}, Глюкоза={{ sortedUrineResult.urineGeneral.glucose.glucoseName }},
-            Ацетон={{ sortedUrineResult.urineGeneral.acetone.acetoneName }}, Желч. пигмент={{
-            (sortedUrineResult.urineGeneral.bile) ? 'есть' : 'нет' }}<br/>
-            Эпителий: плоский={{ sortedUrineResult.urineElements.flatEpithelium }}, моч.путей={{
-            sortedUrineResult.urineElements.tractEpithelium }}, почечный={{
-            sortedUrineResult.urineElements.renalEpithelium }}. Лейкоциты={{ sortedUrineResult.urineElements.leucocytes
-            }}, Эритроциты={{ sortedUrineResult.urineElements.erythrocytes}}<br/>
-            Цилиндры: гиалин={{ sortedUrineResult.urineElements.cylinders.hyaline }}, зернист={{
-            sortedUrineResult.urineElements.cylinders.granular}}, воск={{ sortedUrineResult.urineElements.cylinders.waxy
-            }}, эпител={{ sortedUrineResult.urineElements.cylinders.epithelial }}. Соли={{
-            sortedUrineResult.urineElements.salts.saltsName }}, слизь={{ (sortedUrineResult.urineElements.slime) ?
-            'есть' : 'нет' }}
-          </p>
+          <div v-if="makeAppointmentDialog.showBlood">
+            <p v-if="sortedBloodResult.bloodResult">
+              <strong>Клинический анализ крови:</strong> <u>{{ sortedBloodResult.bloodDate | formatDate }}</u>:<br/>
+              {{ (sortedBloodResult.bloodResult.hemoglobin) ? `Hb=${sortedBloodResult.bloodResult.hemoglobin},` : '' }}
+              {{ (sortedBloodResult.bloodResult.leucocytes) ? `L=${sortedBloodResult.bloodResult.leucocytes},` : '' }}
+              {{ (sortedBloodResult.bloodResult.esr) ? `СОЭ=${sortedBloodResult.bloodResult.esr},` : '' }}
+              {{ (sortedBloodResult.bloodResult.basophils) ? `Баз=${sortedBloodResult.bloodResult.basophils},` : '' }}
+              {{ (sortedBloodResult.bloodResult.myelocytes) ? `Миел=${sortedBloodResult.bloodResult.myelocytes},` : ''
+              }}
+              {{ (sortedBloodResult.bloodResult.young) ? `Юные=${sortedBloodResult.bloodResult.young},` : '' }}
+              {{ (sortedBloodResult.bloodResult.sticks) ? `Пал=${sortedBloodResult.bloodResult.sticks},` : '' }}
+              {{ (sortedBloodResult.bloodResult.segments) ? `Сегменты=${sortedBloodResult.bloodResult.segments},` : ''
+              }}
+              {{ (sortedBloodResult.bloodResult.lymphocytes) ?
+              `Лимф=${sortedBloodResult.bloodResult.lymphocytes},` : '' }}
+              {{ (sortedBloodResult.bloodResult.monocytes) ? `Моно=${sortedBloodResult.bloodResult.monocytes},` : '' }}
+              {{ (sortedBloodResult.bloodResult.normoblasts) ?
+              `Норм=${sortedBloodResult.bloodResult.normoblasts},` : '' }}
+              {{ (sortedBloodResult.bloodResult.tng) ? `ТЗН=${sortedBloodResult.bloodResult.tng}` : '' }}
+            </p>
+            <p v-if="sortedBloodResult.bloodResult">
+              <strong>Биохимический анализ крови:</strong> <u>{{ sortedBloodResult.bloodDate | formatDate }}</u>:<br/>
+              {{ (sortedBloodResult.bloodResult.sugar) ? `Сахар=${sortedBloodResult.bloodResult.sugar},` : '' }}
+              {{ (sortedBloodResult.bloodResult.cholesterol) ?
+              `Холистерин=${sortedBloodResult.bloodResult.cholesterol}` : '' }}
+            </p>
+            <p v-if="!sortedBloodResult.bloodResult">
+              <strong>Анализ крови: <span class="red--text">отсутствует</span></strong>
+            </p>
+          </div>
+          <div v-if="makeAppointmentDialog.showUrine">
+            <p>
+              <span v-if="sortedUrineResult.urineGeneral">
+                <strong>Клинический анализ мочи:</strong> <u>{{ sortedUrineResult.urineDate | formatDate }}</u>:<br/>
+                {{ (sortedUrineResult.urineGeneral.color) ?
+                `Цвет=${urineColors.find(item => item.value === sortedUrineResult.urineGeneral.color).text},` : '' }}
+                {{ (sortedUrineResult.urineGeneral.reaction) ?
+                `Реакция=${urineReactions.find(item => item.value === sortedUrineResult.urineGeneral.reaction).text},` :
+                '' }}
+                {{ (sortedUrineResult.urineGeneral.density) ? `Плотность=${sortedUrineResult.urineGeneral.density},` :
+                '' }}
+                <br>
+                {{ (sortedUrineResult.urineGeneral.transparency) ? 'Прозрачность=прозрачная,' : 'Прозрачность=мутная,' }}
+                {{ (sortedUrineResult.urineGeneral.protein) ? `Белок=${sortedUrineResult.urineGeneral.protein},` : '' }}
+                {{ (sortedUrineResult.urineGeneral.glucose) ? `Глюкоза=${sortedUrineResult.urineGeneral.glucose},` : '' }}
+                {{ (sortedUrineResult.urineGeneral.acetone) ?
+                `Ацетон=${urineAcetone.find(item => item.value === sortedUrineResult.urineGeneral.acetone).text},` : '' }}
+                {{ (sortedUrineResult.urineGeneral.bile) ? 'Желч. пигмент=есть' : 'Желч. пигмент=нет' }}
+                <br/>
+              </span>
+              <span
+                v-if="sortedUrineResult.urineElements.flatEpithelium ||
+                sortedUrineResult.urineElements.tractEpithelium || sortedUrineResult.urineElements.renalEpithelium"
+              >
+                <u>Эпителий:</u>
+                {{(sortedUrineResult.urineElements.flatEpithelium) ?
+                `плоский=${sortedUrineResult.urineElements.flatEpithelium},` : '' }}
+                {{(sortedUrineResult.urineElements.tractEpithelium) ?
+                `моч.путей=${sortedUrineResult.urineElements.tractEpithelium},` : '' }}
+                {{(sortedUrineResult.urineElements.renalEpithelium) ?
+                `почечный=${sortedUrineResult.urineElements.renalEpithelium}` : '' }}
+                <br/>
+              </span>
+              <span v-if="sortedUrineResult.urineElements.leucocytes || sortedUrineResult.urineElements.erythrocytes">
+                {{ (sortedUrineResult.urineElements.leucocytes) ?
+                `Лейкоциты=${sortedUrineResult.urineElements.leucocytes},` : '' }}
+                {{ (sortedUrineResult.urineElements.erythrocytes) ?
+                `Эритроциты=${sortedUrineResult.urineElements.erythrocytes}` : '' }}
+                <br/>
+              </span>
+              <span v-if="sortedUrineResult.urineElements.cylinders.hyaline ||
+                sortedUrineResult.urineElements.cylinders.granular || sortedUrineResult.urineElements.cylinders.waxy ||
+                sortedUrineResult.urineElements.cylinders.epithelial"
+              >
+                <u>Цилиндры:</u>
+                {{ (sortedUrineResult.urineElements.cylinders.hyaline) ?
+                `гиалин=${sortedUrineResult.urineElements.cylinders.hyaline},` : '' }}
+                {{ (sortedUrineResult.urineElements.cylinders.granular) ?
+                `зернист=${sortedUrineResult.urineElements.cylinders.granular},` : '' }}
+                {{ (sortedUrineResult.urineElements.cylinders.waxy) ?
+                `воск=${sortedUrineResult.urineElements.cylinders.waxy},` : '' }}
+                {{(sortedUrineResult.urineElements.cylinders.epithelial) ?
+                `эпител=${sortedUrineResult.urineElements.cylinders.epithelial}` : '' }}
+                <br>
+              </span>
+              {{ (sortedUrineResult.urineElements.salts) ?
+              `Соли=${urineSalts.find(item => item.value === sortedUrineResult.urineElements.salts).text},` : '' }}
+              {{ (sortedUrineResult.urineElements.slime) ? 'слизь=есть' : 'слизь=нет' }}
+            </p>
+            <p v-if="!sortedUrineResult.urineGeneral">
+              <strong>Анализ мочи: <span class="red--text">отсутствует</span></strong>
+            </p>
+          </div>
           <p v-if="sortedSmearResult.smearResult && makeAppointmentDialog.showSmear">
-            <strong>Мазок на Gn:</strong> {{ sortedSmearResult.smearDate | formatDate }}:<br/>
-            Гонококк={{ (sortedSmearResult.smearResult.smearGonococcus) ? 'Обнаружены' : 'Не обнаружены' }},
-            Лейкоциты={{ smearLeucocytes.find(item => item.value === sortedSmearResult.smearResult.smearLeucocytes).text }},
-            Диплококки={{ (sortedSmearResult.smearResult.smearDiplococcus) ? 'Обнаружены' : 'Не обнаружены' }},
-            Эпителий={{ (sortedSmearResult.smearResult.smearEpithelium) ? 'Обнаружены' : 'Не обнаружены' }},<br/>
-            Трихомонады={{ (sortedSmearResult.smearResult.smearTrichomonas) ? 'Обнаружены' : 'Не обнаружены' }},
-            Дрожжеподобные грибы={{ (sortedSmearResult.smearResult.smearFungus) ? 'Обнаружены' : 'Не обнаружены' }},
-            Ключевые клетки={{ (sortedSmearResult.smearResult.smearKeyCells) ? 'Обнаружены' : 'Не обнаружены' }}
+            <strong>Мазок на Gn:</strong> <u>{{ sortedSmearResult.smearDate | formatDate }}</u>:<br/>
+            {{ (sortedSmearResult.smearResult.smearGonococcus) ? 'Гонококк=обнаружены,' : 'Гонококк=не обнаружены,' }}
+            {{ (sortedSmearResult.smearResult.smearLeucocytes) ?
+            `Лейкоциты=${smearLeucocytes.find(item => item.value ===
+            sortedSmearResult.smearResult.smearLeucocytes).text},` : ''}}
+            {{ (sortedSmearResult.smearResult.smearDiplococcus) ? 'Диплококки=обнаружены,' :
+            'Диплококки=не обнаружены,' }}
+            {{ (sortedSmearResult.smearResult.smearEpithelium) ? 'Эпителий=обнаружены,' :
+            'Эпителий=не обнаружены,' }}<br/>
+            {{ (sortedSmearResult.smearResult.smearTrichomonas) ? 'Трихомонады=обнаружены,' :
+            'Трихомонады=не обнаружены,' }}
+            {{ (sortedSmearResult.smearResult.smearFungus) ? 'Дрожжеподобные грибы=обнаружены,' :
+            'Дрожжеподобные грибы=не обнаружены,' }}
+            {{ (sortedSmearResult.smearResult.smearKeyCells) ? 'Ключевые клетки=обнаружены' :
+            'Ключевые клетки=не обнаружены' }}
           </p>
           <p v-if="sortedRwResult.rwResult && makeAppointmentDialog.showRw">
-            <strong>Кровь на RW:</strong> {{ sortedRwResult.rwDate | formatDate }}:<br/>
-            Результат={{ rwTypes.find(item => item.value === sortedRwResult.rwResult).text }}
+            <strong>Кровь на RW:</strong> <u>{{ sortedRwResult.rwDate | formatDate }}</u>:<br/>
+            {{ (sortedRwResult.rwResult) ?
+            `Результат=${rwTypes.find(item => item.value === sortedRwResult.rwResult).text}` : '' }}
           </p>
           <v-container grid-list-md>
             <v-layout row wrap v-if="currentUserDoctor.id === 4">
@@ -371,7 +457,7 @@
               </v-flex>
             </v-layout>
             <v-layout row wrap>
-              <v-flex sm12>
+              <v-flex sm12 v-if="this.currentUserDoctor.id !== 13 && this.currentUserDoctor.id !== 14">
                 <v-text-field
                   multi-line
                   rows="3"
@@ -384,7 +470,7 @@
               </v-flex>
             </v-layout>
             <v-layout row wrap>
-              <v-flex sm12 md2>
+              <v-flex sm12>
                 <v-text-field
                   auto-grow
                   label="Жалобы"
@@ -393,13 +479,17 @@
                 >
                 </v-text-field>
               </v-flex>
-              <v-flex sm12 md4>
-                <v-text-field
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12 md8>
+                <v-select
+                  :items="mkbsForSelect"
                   label="Диагноз"
                   :color="subSystem.primaryColor"
                   v-model="currentDoctorResult.doctorDiagnosis.diagnosis"
+                  autocomplete
                 >
-                </v-text-field>
+                </v-select>
               </v-flex>
               <v-flex sm12 md2>
                 <v-select
@@ -407,14 +497,16 @@
                   label="Выявляен"
                   :color="subSystem.primaryColor"
                   v-model="currentDoctorResult.doctorDiagnosis.detectability"
+                  :disabled="!currentDoctorResult.doctorDiagnosis.diagnosis"
                 >
                 </v-select>
               </v-flex>
-              <v-flex sm12 md4>
+              <v-flex sm12 md2>
                 <v-text-field
                   label="Комментарий"
                   :color="subSystem.primaryColor"
                   v-model="currentDoctorResult.doctorDiagnosis.diagnosisComment"
+                  :disabled="!currentDoctorResult.doctorDiagnosis.diagnosis"
                 >
                 </v-text-field>
               </v-flex>
@@ -422,12 +514,57 @@
             <v-layout row wrap>
               <v-flex sm12>
                 <v-select
+                  v-if="this.currentUserDoctor.id === 4"
                   auto-grow
                   multiple
                   :items="doctorConclusions"
                   label="Годность"
                   :color="subSystem.primaryColor"
                   v-model="currentDoctorResult.doctorConclusion"
+                >
+                </v-select>
+                <v-text-field
+                  v-if="this.currentUserDoctor.id !== 4"
+                  label="Годность"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorConclusion"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap
+              v-if="(this.currentUser.roles.medos.doctor === 1 ||
+              this.currentUser.roles.medos.admin || this.currentUser.roles.superuser)
+              && currentDoctorResult.doctorRecommendations"
+            >
+              <v-flex sm12>
+                <v-select
+                  auto-grow
+                  multiple
+                  :items="recommendationsDoctors"
+                  label="Рекоммендации (специалисты)"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorRecommendations.recommendationDoctors"
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12>
+                <v-select
+                  auto-grow
+                  multiple
+                  :items="recommendationsExams"
+                  label="Рекоммендации (обследования)"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorRecommendations.recommendationExams"
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12>
+                <v-select
+                  :items="recommendationsRecoveries"
+                  label="Рекоммендации (сан.кур. лечение)"
+                  :color="subSystem.primaryColor"
+                  v-model="currentDoctorResult.doctorRecommendations.recommendationRecovery"
                 >
                 </v-select>
               </v-flex>
@@ -446,13 +583,12 @@
           <v-btn
             v-if="this.currentUser.roles.medos.doctor === 1 || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser"
             :color="subSystem.primaryColor" class="white--text" @click.native="yesExaminationDialog"
-            :disabled="!(ifAllDoctorsComplete() && ifAllExamsComplete())"
           >Сохранить прием
           </v-btn>
           <v-btn
             v-if="this.currentUser.roles.medos.doctor === 1 || this.currentUser.roles.medos.admin || this.currentUser.roles.superuser"
             :color="subSystem.secondaryColor" class="white--text" @click.native="openArchiveMedosDialog"
-            :disabled="!(ifAllDoctorsComplete() && ifAllExamsComplete() && currentEditPatient.activeMedos.medosDoctorResults.some(result => result.doctorId === 1))"
+            :disabled="!(currentEditPatient.activeMedos.medosDoctorResults.some(result => result.doctorId === 1))"
           >Закрыть медосмотр
           </v-btn>
         </v-card-actions>
@@ -693,7 +829,7 @@
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md v-if="this.currentEditPatient.activeMedos.medosDoctors">
-            <h2 style="margin-bottom: 10px" :class="(ifAllDoctorsComplete()) ? 'green--text' : 'red--text'">Доктора</h2>
+            <h2 style="margin-bottom: 10px" :class="(ifAllDoctorsComplete()) ? 'green--text' : 'red--text'">Врачи</h2>
             <v-expansion-panel focusable>
               <v-expansion-panel-content
                 v-for="doctor in currentEditPatient.activeMedos.medosDoctors.mustDoctors"
@@ -715,11 +851,14 @@
                     <p>
                       <strong>Жалобы:</strong> {{ getDoctorResult(doctor.doctorId).doctorComplaints }}
                     </p>
-                    <p>
+                    <p v-if="getDoctorResult(doctor.doctorId).doctorStatus">
                       <strong>Объективный статус:</strong> {{ getDoctorResult(doctor.doctorId).doctorStatus }}
                     </p>
                     <p v-if="getDoctorResult(doctor.doctorId).doctorDiagnosis">
-                      <strong>Диагноз:</strong> {{ getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosis }}
+                      <strong>Диагноз:</strong>
+                      «{{ getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosis }} -
+                      {{ mkbs.find(mkb => mkb.mkbCode === getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosis
+                      ).mkbName }}»
                       <strong v-if="getDoctorResult(doctor.doctorId).doctorDiagnosis.detectability !== undefined">
                         ({{ (getDoctorResult(doctor.doctorId).doctorDiagnosis.detectability === true) ? '+' : '-'
                         }})
@@ -727,7 +866,63 @@
                       <em v-if="getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosisComment !== ''">— {{
                         getDoctorResult(doctor.doctorId).doctorDiagnosis.diagnosisComment }}</em>
                     </p>
-                    <p v-if="getDoctorResult(doctor.doctorId).doctorSpecial"></p>
+                    <p v-if="getDoctorResult(doctor.doctorId).doctorSpecial">
+                      <strong>Зрение:</strong>
+                      <br>
+                      <span v-if="getDoctorResult(doctor.doctorId).doctorSpecial.noCorrection.od ||
+                        getDoctorResult(doctor.doctorId).doctorSpecial.noCorrection.os"
+                      >
+                        <u>Без коррекции:</u>
+                        <br>
+                        {{ (getDoctorResult(doctor.doctorId).doctorSpecial.noCorrection.od) ?
+                        `OD=${getDoctorResult(doctor.doctorId).doctorSpecial.noCorrection.od}` : '' }}
+                        <br>
+                        {{ (getDoctorResult(doctor.doctorId).doctorSpecial.noCorrection.os) ?
+                        `OS=${getDoctorResult(doctor.doctorId).doctorSpecial.noCorrection.os}` : '' }}
+                        <br>
+                      </span>
+                      <span v-if="!!(getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.sph) ||
+                        !!(getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.cyl) ||
+                        !!(getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.ax) ||
+                        !!(getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.sph) ||
+                        !!(getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.cyl) ||
+                        !!(getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.ax)"
+                      >
+                        <u>Коррекция:</u>
+                        <br>
+                        <span v-if="getDoctorResult(doctor.doctorId).doctorSpecial.correction.od">
+                          <strong>OD:</strong>
+                          {{ (getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.sph) ?
+                          `SPH=${getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.sph}` : '' }}
+                          {{ (getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.cyl) ?
+                          `CY:=${getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.cyl}` : '' }}
+                          {{ (getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.ax) ?
+                          `AX=${getDoctorResult(doctor.doctorId).doctorSpecial.correction.od.ax}` : '' }}
+                          <br>
+                        </span>
+                        <span v-if="getDoctorResult(doctor.doctorId).doctorSpecial.correction.os">
+                          <strong>OS:</strong>
+                          {{ (getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.sph) ?
+                          `SPH=${getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.sph}` : '' }}
+                          {{ (getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.cyl) ?
+                          `CY:=${getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.cyl}` : '' }}
+                          {{ (getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.ax) ?
+                          `AX=${getDoctorResult(doctor.doctorId).doctorSpecial.correction.os.ax}` : '' }}
+                        </span>
+                        <br>
+                      </span>
+                      <span v-if="!!(getDoctorResult(doctor.doctorId).doctorSpecial.withCorrection.od) ||
+                        !!(getDoctorResult(doctor.doctorId).doctorSpecial.withCorrection.os)"
+                      >
+                        <u>С коррекцией:</u>
+                        <br>
+                        {{ (getDoctorResult(doctor.doctorId).doctorSpecial.withCorrection.od) ?
+                        `OD=${getDoctorResult(doctor.doctorId).doctorSpecial.withCorrection.od}` : '' }}
+                        <br>
+                        {{ (getDoctorResult(doctor.doctorId).doctorSpecial.withCorrection.os) ?
+                        `OS=${getDoctorResult(doctor.doctorId).doctorSpecial.withCorrection.os}` : '' }}
+                      </span>
+                    </p>
                     <p>
                       <strong>Годность:</strong> {{ getDoctorResult(doctor.doctorId).doctorConclusion.toString() }}
                     </p>
@@ -776,6 +971,9 @@
                     <span v-if="exam.examId === 34">
                       <strong>AD:</strong> <em>125:</em> {{ getExamResult(exam.examId).examResult.ad.f125 }} <em>250:</em> {{ getExamResult(exam.examId).examResult.ad.f250 }} <em>500:</em> {{ getExamResult(exam.examId).examResult.ad.f500 }} <em>1000:</em> {{ getExamResult(exam.examId).examResult.ad.f1000 }} <em>2000:</em> {{ getExamResult(exam.examId).examResult.ad.f2000 }} <em>4000:</em> {{ getExamResult(exam.examId).examResult.ad.f4000 }} <em>6000:</em> {{ getExamResult(exam.examId).examResult.ad.f6000 }}<br>
                       <strong>AS:</strong> <em>125:</em> {{ getExamResult(exam.examId).examResult.as.f125 }} <em>250:</em> {{ getExamResult(exam.examId).examResult.as.f250 }} <em>500:</em> {{ getExamResult(exam.examId).examResult.as.f500 }} <em>1000:</em> {{ getExamResult(exam.examId).examResult.as.f1000 }} <em>2000:</em> {{ getExamResult(exam.examId).examResult.as.f2000 }} <em>4000:</em> {{ getExamResult(exam.examId).examResult.as.f4000 }} <em>6000:</em> {{ getExamResult(exam.examId).examResult.as.f6000 }}
+                    </span>
+                    <span v-if="exam.examId === 1 || exam.examId === 47">
+                      Пациент прошел.
                     </span>
                   </v-card-text>
                 </v-card>
@@ -855,6 +1053,10 @@
         patientQuery: {},
         //* Подгруженные пациенты после запроса по ФИО.
         patients: [],
+        //* Подгруженные диагнозы.
+        mkbs: [],
+        //* Диагнозы для селектора.
+        mkbsForSelect: [],
         //* Если доктор, то данные.
         currentUserDoctor: {
           id: '',
@@ -868,7 +1070,12 @@
         },
         //* Показания доктора, которые будем вносить.
         currentDoctorResult: {
-          doctorDiagnosis: {}
+          doctorDiagnosis: {},
+          doctorRecommendations: {
+            recommendationDoctors: '',
+            recommendationExams: '',
+            recommendationRecovery: ''
+          }
         },
         //* Обследование, которое будем вносить (в основном для офтальмолога).
         currentExamResult: {},
@@ -939,8 +1146,8 @@
           fields: false,
           colorBlindness: false
         },
-        //* Массив обследований, которые выводят в годности.
-        examsForConclusions: [1, 19, 20, 21, 32, 34, 38, 46],
+        //* Массив обследований, которые выводят в годности (46 — маммография, 47 — экг).
+        examsForConclusions: [1, 19, 20, 21, 32, 34, 38, 46, 47],
         //* Справочник годностей.
         doctorConclusions: [
           'Годен',
@@ -1000,62 +1207,180 @@
             text: 'Трихромазия'
           }
         ],
+        //* Справочники мочи.
+        urineColors: [
+          {
+            value: 1,
+            text: 'желтый'
+          },
+          {
+            value: 2,
+            text: 'светло-желтый'
+          },
+          {
+            value: 3,
+            text: 'соломенно-желтый'
+          },
+          {
+            value: 4,
+            text: 'бесцветный'
+          }
+        ],
+        urineReactions: [
+          {
+            value: 1,
+            text: 'кислая'
+          },
+          {
+            value: 2,
+            text: 'щелочная'
+          },
+          {
+            value: 3,
+            text: 'слабокислая'
+          },
+          {
+            value: 4,
+            text: 'нейтральная'
+          }
+        ],
+        urineAcetone: [
+          {
+            value: 1,
+            text: '0'
+          },
+          {
+            value: 2,
+            text: '+-'
+          },
+          {
+            value: 3,
+            text: '+'
+          },
+          {
+            value: 4,
+            text: '++'
+          },
+          {
+            value: 5,
+            text: '+++'
+          }
+        ],
+        urineSalts: [
+          {
+            value: 0,
+            text: 'нет'
+          },
+          {
+            value: 1,
+            text: 'ураты'
+          },
+          {
+            value: 2,
+            text: 'фосфаты'
+          },
+          {
+            value: 3,
+            text: 'оксолаты'
+          },
+          {
+            value: 4,
+            text: 'мочевой кислоты'
+          },
+          {
+            value: 5,
+            text: 'трипельфосфаты'
+          },
+          {
+            value: 6,
+            text: 'холестерин'
+          },
+          {
+            value: 7,
+            text: 'билирубин'
+          }
+        ],
         //* Справочник мазков.
         smearLeucocytes: [
           {
             value: 1,
-            text: '1 - Единичные'
+            text: 'единичные'
           },
           {
             value: 2,
-            text: '2 - до 25'
+            text: 'до 25'
           },
           {
             value: 3,
-            text: '3 - до 50'
+            text: 'до 50'
           },
           {
             value: 4,
-            text: '4 - до 100'
+            text: 'до 100'
           },
           {
             value: 5,
-            text: '5 - выше 100'
+            text: 'выше 100'
           }
         ],
-        //* Справочник кодов на RW.
+        //* Справочник крови на RW.
         rwTypes: [
           {
             value: 1,
-            text: '1 - Отрицительный'
+            text: 'отрицительный'
           },
           {
             value: 2,
-            text: '2 - Положительный X'
+            text: 'положительный X'
           },
           {
             value: 3,
-            text: '3 - Положительный XX'
+            text: 'положительный XX'
           },
           {
             value: 4,
-            text: '4 - Положительный XXX'
+            text: 'положительный XXX'
           },
           {
             value: 5,
-            text: '5 - Положительный XXXX'
+            text: 'положительный XXXX'
           },
           {
             value: 6,
-            text: '6 - Гемолиз'
+            text: 'гемолиз'
           },
           {
             value: 7,
-            text: '7 - Хилезная'
+            text: 'хилезная'
           },
           {
             value: 8,
-            text: '8 - Брак'
+            text: 'брак'
+          }
+        ],
+        //* Справочнии рекоммендаций.
+        recommendationsDoctors: [
+          'Ревматолог',
+          'Онколог',
+          'Уролог',
+          'Стоматолог',
+          'Аллерголог'
+        ],
+        recommendationsExams: [
+          'Рентген',
+          'МРТ',
+          'МСКТ',
+          'Иригоскопия',
+          'ФГС'
+        ],
+        recommendationsRecoveries: [
+          {
+            value: 1,
+            text: 'санаторий'
+          },
+          {
+            value: 2,
+            text: 'воды целебные'
           }
         ],
         //* Все, что связано с snackBar, который всплывает во время ошибок.
@@ -1077,12 +1402,14 @@
     mounted () {
       //* Подгружаем пользователя, который осуществил вход.
       this.getCurrentUser()
+      //* Подгружаем диагнозы.
+      this.getAllMkbs()
     },
     methods: {
       //* Методы про диалог приема врача.
       openExaminationDialog (item) {
         this.currentEditPatient = item
-        //* Проверяем открывать ли вообще диалог, вдруг отсутствуют посещения доврачебного или анализы.
+        //* Проверяем открывать ли вообще диалог, вдруг отсутствуют посещения доврачебного.
         if (!this.currentEditPatient.activeMedos.medosDoctors) {
           this.snackBar = {
             color: 'red darken-2 white--text',
@@ -1090,30 +1417,20 @@
             message: 'Пациент не был в доврачебном кабинете.',
             show: true
           }
-        } else if (this.currentEditPatient.bloodResults.length === 0) {
-          this.snackBar = {
-            color: 'red darken-2 white--text',
-            timeout: 5000,
-            message: 'У пациента отсутствуют анализы крови.',
-            show: true
-          }
-        } else if (this.currentEditPatient.urineClinicalResults.length === 0) {
-          this.snackBar = {
-            color: 'red darken-2 white--text',
-            timeout: 5000,
-            message: 'У пациента отсутствуют анализы мочи.',
-            show: true
-          }
         } else {
           //* Выбираем последние анализы и последнюю флюорографию.
-          let sortedBlood = this.currentEditPatient.bloodResults.sort((a, b) => {
-            return new Date(b.bloodDate) - new Date(a.bloodDate)
-          })
-          this.sortedBloodResult = sortedBlood[0]
-          let sortedUrine = this.currentEditPatient.urineClinicalResults.sort((a, b) => {
-            return new Date(b.urineDate) - new Date(a.urineDate)
-          })
-          this.sortedUrineResult = sortedUrine[0]
+          if (this.currentEditPatient.bloodResults.length > 0) {
+            let sortedBlood = this.currentEditPatient.bloodResults.sort((a, b) => {
+              return new Date(b.bloodDate) - new Date(a.bloodDate)
+            })
+            this.sortedBloodResult = sortedBlood[0]
+          }
+          if (this.currentEditPatient.urineClinicalResults.length > 0) {
+            let sortedUrine = this.currentEditPatient.urineClinicalResults.sort((a, b) => {
+              return new Date(b.urineDate) - new Date(a.urineDate)
+            })
+            this.sortedUrineResult = sortedUrine[0]
+          }
           if (this.currentEditPatient.smearResults.length > 0) {
             let sortedSmear = this.currentEditPatient.smearResults.sort((a, b) => {
               return new Date(b.smearDate) - new Date(a.smearDate)
@@ -1215,6 +1532,7 @@
         if (this.currentUserDoctor.id === 4) {
           tmpDoctorResult.doctorSpecial = this.currentOphthalmologistResult
         }
+        tmpDoctorResult.updatedBy = this.currentUser._id
         if (this.makeAppointmentDialog.edit) {
           if (this.currentUserDoctor.id !== 0) {
             Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/doctorResult/${tmpDoctorResult._id}/`, {
@@ -1307,6 +1625,7 @@
         }
         let tmpExamResults = this.currentEditPatient.activeMedos.medosExamResults
         tmpExamResults.forEach((item) => {
+          item.updatedBy = this.currentUser._id
           if (item._id === undefined) {
             Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/examResult/`, {
               examResult: item
@@ -1381,6 +1700,7 @@
       },
       yesArchiveMedosDialog () {
         let tempMedos = this.currentEditPatient.activeMedos
+        tempMedos.updatedBy = this.currentUser._id
         Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/medosFinal/`, {
           medosResult: tempMedos
         }, {
@@ -1405,6 +1725,7 @@
               bloodResults: [],
               urineClinicalResults: []
             }
+            this.getMedosPatients()
           } else {
             this.snackBar.color = 'red darken-2 white--text'
             this.snackBar.timeout = 5000
@@ -1604,10 +1925,34 @@
               this.currentUserDoctor.name = 'гинеколог'
               this.currentDoctorResult.doctorStatus = 'Наружные половые органы развиты правильно. Влагалище, своды без патологии. Шейка матки без патологии. Тело матки не увеличено, правильной формы, положение физиологическое. Цервикальный канал закрыт, придатки не пальпируются. Выделения скудные, без цвета и неприятного запаха. Пальцевое исследование прямой кишки – патологии в малом тазу нет. Исследование молочных желез: симметричные, окраска, соски, консистенция обычные.'
               break
+            case 13:
+              this.currentUserDoctor.name = 'психиатр'
+              break
+            case 14:
+              this.currentUserDoctor.name = 'нарколог'
+              break
             default:
               this.currentUserDoctor.name = 'терапевт'
               this.currentDoctorResult.doctorStatus = 'Кожные покровы и видимые слизистые обычной окраски. Язык чистый. Дыхание везикулярное, хрипов нет. Тоны сердца ясные, ритм правильный, Живот мягкий, безболезненный. Отеков нет.'
               break
+          }
+        }).catch(err => {
+          this.errorHandler(err)
+        })
+      },
+      //* Подгружаем все вредности для последующей работы.
+      getAllMkbs () {
+        Axios.get(`${GKP7API}/api/v1/mkbs`, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+        }).then(({data}) => {
+          if (data.success === true) {
+            this.mkbs = data.mkbs
+            this.mkbsForSelect = this.mkbs.map(
+              mkb => ({
+                value: mkb.mkbCode,
+                text: `${mkb.mkbCode} - ${mkb.mkbName}`
+              })
+            )
           }
         }).catch(err => {
           this.errorHandler(err)
@@ -1632,6 +1977,10 @@
             return 'Стоматолог'
           case 12:
             return 'Гинеколог'
+          case 13:
+            return 'Психиатр'
+          case 14:
+            return 'Нарколог'
         }
       },
       //* Есть ли результат такого доктора.
@@ -1641,27 +1990,6 @@
       //* Результат такого доктора.
       getDoctorResult (doctorId) {
         return this.currentEditPatient.activeMedos.medosDoctorResults.find(result => result.doctorId === doctorId)
-      },
-      //* Название обследования по id.
-      getExamName (examId) {
-        switch (examId) {
-          case 1:
-            return 'Спирометрия'
-          case 19:
-            return 'Глазное дно'
-          case 20:
-            return 'Поля зрения'
-          case 21:
-            return 'Глазное давление'
-          case 32:
-            return 'Рефрактометрия'
-          case 34:
-            return 'Аудиометрия'
-          case 38:
-            return 'Цветоощущение'
-          case 46:
-            return 'ЭКГ'
-        }
       },
       //* Есть ли результат такого обследования.
       ifExamHasResult (examId) {
