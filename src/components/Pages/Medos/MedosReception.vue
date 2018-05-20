@@ -94,6 +94,7 @@
                       </v-tooltip>
                       <v-tooltip top :color="subSystem.deleteColor">
                         <v-btn
+                          class="uwd-small"
                           slot="activator"
                           @click.native="openRemoveDialog({remove: 'patient', patient: props.item})"
                           :color="subSystem.deleteColor"
@@ -260,7 +261,7 @@
     <!-- / Диалог добавления/редактирования пациента -->
 
     <!-- Диалог добавления/редактирования работы -->
-    <v-dialog v-model="editJobDialog.show" persistent lazy max-width="700px">
+    <v-dialog v-model="editJobDialog.show" persistent lazy max-width="600px">
       <v-card>
         <v-card-title>
           <span class="headline">
@@ -271,7 +272,7 @@
         <v-card-text>
           <v-container grid-list-md v-if="currentEditPatient.activeJob">
             <v-layout row wrap>
-              <v-flex sm12 md6>
+              <v-flex sm12>
                 <v-select
                   :items="companiesForSelect"
                   label="Предприятие"
@@ -283,7 +284,7 @@
                 >
                 </v-select>
               </v-flex>
-              <v-flex sm12 md6>
+              <v-flex sm12>
                 <v-select
                   :items="currentCompanyDivisions"
                   label="Цех"
@@ -890,5 +891,13 @@
   .theme--light .input-group input:disabled::placeholder,
   .theme--light .input-group input:disabled {
     color: rgba(245, 127, 23, 0.7) !important;
+  }
+
+  .uwd-small {
+    width: 26px;
+    height: 26px;
+    i {
+      font-size: 14px;
+    }
   }
 </style>

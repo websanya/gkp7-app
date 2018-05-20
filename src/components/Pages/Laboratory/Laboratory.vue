@@ -9,30 +9,36 @@
           align-center
         >
           <v-flex xs12>
-            <h2 class="text-xs-center">Поиск пациентов</h2>
+            <h2 class="text-xs-center">Поиск пациентов на медосмотре</h2>
             <v-container grid-list-md>
               <v-layout row wrap>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Фамилия"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Фамилия"
                                 v-model="patientQuery.lastName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Имя"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Имя"
                                 v-model="patientQuery.firstName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Отчество"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Отчество"
                                 v-model="patientQuery.middleName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md12>
-                  <v-btn @click.native="getPatients" :color="subSystem.primaryColor" dark large block>Найти</v-btn>
+                  <v-btn @click.native="getMedosPatients" :color="subSystem.primaryColor" dark large block>Найти</v-btn>
                 </v-flex>
               </v-layout>
               <v-data-table
-                hide-headers
+                :headers="[
+                  {text:'ФИО', sortable: false},
+                  {text:'Дата рождения', sortable: false},
+                  {text:'Пол', sortable: false},
+                  {text:'Тип осмотра', sortable: false},
+                  {text:'Действия', sortable: false}
+                ]"
                 v-if="patients.length > 0"
                 :items="patients"
                 hide-actions
@@ -40,20 +46,10 @@
               >
                 <template slot="items" slot-scope="props">
                   <tr>
-                    <td width="72px">
-                      <v-tooltip right color="light-blue darken-4">
-                        <v-icon
-                          slot="activator"
-                          v-if="(props.item.hasActiveMedos)"
-                          color="light-blue darken-4">
-                          assignment_ind
-                        </v-icon>
-                        <span>Пациент проходит мед. осмотр</span>
-                      </v-tooltip>
-                    </td>
                     <td>{{ props.item.fio }}</td>
                     <td>{{ props.item.dateBirth }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
+                    <td>{{ props.item.activeMedos.medosType }}</td>
                     <td width="266px">
                       <v-tooltip top :color="subSystem.primaryColor">
                         <v-btn
@@ -142,11 +138,11 @@
           <v-container grid-list-md v-if="currentEditPatient.bloodResults.length > 0">
             <v-data-table
               :headers="[
-                  { text: 'Дата анализа', value: 'bloodDate' },
-                  { text: 'Гемоглобин', value: 'bloodResult.hemoglobin' },
-                  { text: 'Лейкоциты', value: 'bloodResult.leucocytes' },
-                  { text: 'СОЭ', value: 'bloodResult.esr' },
-                  { text: 'Действия', value: '' }
+                  { text: 'Дата анализа', sortable: false },
+                  { text: 'Гемоглобин', sortable: false },
+                  { text: 'Лейкоциты', sortable: false },
+                  { text: 'СОЭ', sortable: false },
+                  { text: 'Действия', sortable: false }
                 ]"
               :items="currentEditPatient.bloodResults"
               hide-actions
@@ -162,7 +158,7 @@
                     <v-tooltip top :color="subSystem.primaryColor">
                       <v-btn
                         slot="activator"
-                        @click.native="openResultDialog({edit: true, item:props.item})"
+                        @click.native="openResultDialog({edit: true, item: props.item})"
                         :color="subSystem.primaryColor"
                         icon
                       >
@@ -216,11 +212,11 @@
           <v-container grid-list-md v-if="currentEditPatient.urineClinicalResults.length > 0">
             <v-data-table
               :headers="[
-                  { text: 'Дата анализа', value: 'urineDate' },
-                  { text: 'Цвет', value: 'urineGeneral.color.colorName' },
-                  { text: 'Реакция', value: 'urineGeneral.reaction.reactionName' },
-                  { text: 'Плотность', value: 'urineGeneral.density' },
-                  { text: 'Действия', value: '' }
+                  { text: 'Дата анализа', sortable: false },
+                  { text: 'Цвет', sortable: false },
+                  { text: 'Реакция', sortable: false },
+                  { text: 'Плотность', sortable: false },
+                  { text: 'Действия', sortable: false }
                 ]"
               :items="currentEditPatient.urineClinicalResults"
               hide-actions
@@ -229,8 +225,8 @@
               <template slot="items" slot-scope="props">
                 <tr>
                   <td>{{ props.item.urineDate | formatDate }}</td>
-                  <td>{{ props.item.urineGeneral.color.colorName }}</td>
-                  <td>{{ props.item.urineGeneral.reaction.reactionName }}</td>
+                  <td>{{ urineColors.find(color => color.value === props.item.urineGeneral.color).text }}</td>
+                  <td>{{ urineReactions.find(reaction => reaction.value === props.item.urineGeneral.reaction).text }}</td>
                   <td>{{ props.item.urineGeneral.density }}</td>
                   <td width="172px">
                     <v-tooltip top :color="subSystem.secondaryColor">
@@ -289,10 +285,10 @@
           <v-container grid-list-md v-if="currentEditPatient.smearResults.length > 0">
             <v-data-table
               :headers="[
-                  { text: 'Дата анализа', value: 'smearDate' },
-                  { text: 'Гонококки', value: 'smearResult.smearGonococcus' },
-                  { text: 'Лейкоциты', value: 'smearResult.smearLeucocytes' },
-                  { text: 'Действия', value: '' }
+                  { text: 'Дата анализа', sortable: false },
+                  { text: 'Гонококки', sortable: false },
+                  { text: 'Лейкоциты', sortable: false },
+                  { text: 'Действия', sortable: false }
                 ]"
               :items="currentEditPatient.smearResults"
               hide-actions
@@ -361,9 +357,9 @@
           <v-container grid-list-md v-if="currentEditPatient.rwResults.length > 0">
             <v-data-table
               :headers="[
-                  { text: 'Дата анализа', value: 'rwDate' },
-                  { text: 'RW', value: 'rwResult' },
-                  { text: 'Действия', value: '' }
+                  { text: 'Дата анализа', sortable: false },
+                  { text: 'RW', sortable: false },
+                  { text: 'Действия', sortable: false }
                 ]"
               :items="currentEditPatient.rwResults"
               hide-actions
@@ -602,22 +598,6 @@
                 >
                 </v-text-field>
               </v-flex>
-              <v-flex sm12 md2>
-                <v-text-field
-                  label="Протромбин"
-                  :color="subSystem.primaryColor"
-                  v-model="currentBloodResult.bloodResult.prothrombin"
-                >
-                </v-text-field>
-              </v-flex>
-              <v-flex sm12 md2>
-                <v-text-field
-                  label="МНО"
-                  :color="subSystem.primaryColor"
-                  v-model="currentBloodResult.bloodResult.inr"
-                >
-                </v-text-field>
-              </v-flex>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -660,14 +640,14 @@
                   return-masked-value
                   v-if="!addAnalyzeDialog.edit"
                   label="Дата анализа"
-                  :color="subSystem.primaryColor"
+                  :color="subSystem.secondaryColor"
                   v-model="currentUrineClinicalResult.urineDate"
                 >
                 </v-text-field>
                 <v-text-field
                   v-if="addAnalyzeDialog.edit"
                   label="Дата анализа"
-                  :color="subSystem.primaryColor"
+                  :color="subSystem.secondaryColor"
                   :value="dateFromIso(currentUrineClinicalResult.urineDate)"
                   readonly
                   disabled
@@ -714,6 +694,8 @@
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
+                  mask="#.###"
+                  return-masked-value
                   label="Плотность"
                   :color="subSystem.secondaryColor"
                   v-model="currentUrineClinicalResult.urineGeneral.density"
@@ -741,14 +723,12 @@
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
-                <v-select
-                  :items="urineGlucose"
+                <v-text-field
                   label="Глюкоза"
                   :color="subSystem.secondaryColor"
                   v-model="currentUrineClinicalResult.urineGeneral.glucose"
-                  autocomplete
                 >
-                </v-select>
+                </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-select
@@ -825,7 +805,7 @@
                 <h3>Цилиндры:</h3>
               </v-flex>
             </v-layout>
-            <v-layout row wrap>
+            <v-layout row wrap v-if="currentUrineClinicalResult.urineElements.cylinders">
               <v-flex sm12 md3>
                 <v-text-field
                   label="Гиалиновые"
@@ -1224,25 +1204,13 @@
           urineDate: '',
           urineNumber: '',
           urineGeneral: {
-            color: {
-              colorType: '',
-              colorName: ''
-            },
-            reaction: {
-              reactionType: '',
-              reactionName: ''
-            },
+            color: '',
+            reaction: '',
             density: '',
             transparency: '',
             protein: '',
-            glucose: {
-              glucoseType: '',
-              glucoseName: ''
-            },
-            acetone: {
-              acetoneType: '',
-              acetoneName: ''
-            },
+            glucose: '',
+            acetone: '',
             bile: false
           },
           urineElements: {
@@ -1257,10 +1225,7 @@
               waxy: '',
               epithelial: ''
             },
-            salts: {
-              saltsId: '',
-              saltsName: ''
-            },
+            salts: '',
             slime: false
           }
         },
@@ -1305,61 +1270,37 @@
         //* Справочники мочи.
         urineColors: [
           {
-            value: {
-              colorType: 1,
-              colorName: 'желтый'
-            },
+            value: 1,
             text: '1 - желтый'
           },
           {
-            value: {
-              colorType: 2,
-              colorName: 'светло-желтый'
-            },
+            value: 2,
             text: '2 - светло-желтый'
           },
           {
-            value: {
-              colorType: 3,
-              colorName: 'соломенно-желтый'
-            },
+            value: 3,
             text: '3 - соломенно-желтый'
           },
           {
-            value: {
-              colorType: 4,
-              colorName: 'бесцветный'
-            },
+            value: 4,
             text: '4 - бесцветный'
           }
         ],
         urineReactions: [
           {
-            value: {
-              reactionType: 1,
-              reactionName: 'кислая'
-            },
+            value: 1,
             text: '1 - кислая'
           },
           {
-            value: {
-              reactionType: 2,
-              reactionName: 'щелочная'
-            },
+            value: 2,
             text: '2 - щелочная'
           },
           {
-            value: {
-              reactionType: 3,
-              reactionName: 'слабокислая'
-            },
+            value: 3,
             text: '3 - слабокислая'
           },
           {
-            value: {
-              reactionType: 4,
-              reactionName: 'нейтральная'
-            },
+            value: 4,
             text: '4 - нейтральная'
           }
         ],
@@ -1373,77 +1314,25 @@
             text: '2 - мутная'
           }
         ],
-        urineGlucose: [
-          {
-            value: {
-              glucoseType: 1,
-              glucoseName: '0'
-            },
-            text: '1 - 0'
-          },
-          {
-            value: {
-              glucoseType: 2,
-              glucoseName: '5,6'
-            },
-            text: '2 - 5,6'
-          },
-          {
-            value: {
-              glucoseType: 3,
-              glucoseName: '28'
-            },
-            text: '3 - 28'
-          },
-          {
-            value: {
-              glucoseType: 4,
-              glucoseName: '56'
-            },
-            text: '4 - 56'
-          },
-          {
-            value: {
-              glucoseType: 5,
-              glucoseName: '>=111'
-            },
-            text: '5 - >=111'
-          }
-        ],
         urineAcetone: [
           {
-            value: {
-              acetoneType: 1,
-              acetoneName: '0'
-            },
+            value: 1,
             text: '1 - 0'
           },
           {
-            value: {
-              acetoneType: 2,
-              acetoneName: '+-'
-            },
+            value: 2,
             text: '2 - +-'
           },
           {
-            value: {
-              acetoneType: 3,
-              acetoneName: '+'
-            },
+            value: 3,
             text: '3 - +'
           },
           {
-            value: {
-              acetoneType: 4,
-              acetoneName: '++'
-            },
+            value: 4,
             text: '4 - ++'
           },
           {
-            value: {
-              acetoneType: 5,
-              acetoneName: '+++'
-            },
+            value: 5,
             text: '5 - +++'
           }
         ],
@@ -1459,59 +1348,35 @@
         ],
         urineSalts: [
           {
-            value: {
-              saltsId: 0,
-              saltsName: 'нет'
-            },
+            value: 0,
             text: '0 - нет'
           },
           {
-            value: {
-              saltsId: 1,
-              saltsName: 'ураты'
-            },
+            value: 1,
             text: '1 - ураты'
           },
           {
-            value: {
-              saltsId: 2,
-              saltsName: 'фосфаты'
-            },
+            value: 2,
             text: '2 - фосфаты'
           },
           {
-            value: {
-              saltsId: 3,
-              saltsName: 'оксолаты'
-            },
+            value: 3,
             text: '3 - оксолаты'
           },
           {
-            value: {
-              saltsId: 4,
-              saltsName: 'мочевой кислоты'
-            },
+            value: 4,
             text: '4 - мочевой кислоты'
           },
           {
-            value: {
-              saltsId: 5,
-              saltsName: 'трипельфосфаты'
-            },
+            value: 5,
             text: '5 - трипельфосфаты'
           },
           {
-            value: {
-              saltsId: 6,
-              saltsName: 'холестерин'
-            },
+            value: 6,
             text: '6 - холестерин'
           },
           {
-            value: {
-              saltsId: 7,
-              saltsName: 'билирубин'
-            },
+            value: 7,
             text: '7 - билирубин'
           }
         ],
@@ -1604,7 +1469,11 @@
         subSystem: {
           primaryColor: 'red darken-4',
           secondaryColor: 'yellow darken-4',
-          deleteColor: 'red'
+          deleteColor: 'red',
+          deleteText: 'red--text',
+          snackBarRed: 'red darken-2 white--text',
+          snackBarYellow: 'yellow accent-3 black--text',
+          snackBarGreen: 'green darken-1 white--text'
         }
       }
     },
@@ -1728,25 +1597,13 @@
               urineDate: '',
               urineNumber: '',
               urineGeneral: {
-                color: {
-                  colorType: '',
-                  colorName: ''
-                },
-                reaction: {
-                  reactionType: '',
-                  reactionName: ''
-                },
+                color: '',
+                reaction: '',
                 density: '',
                 transparency: '',
                 protein: '',
-                glucose: {
-                  glucoseType: '',
-                  glucoseName: ''
-                },
-                acetone: {
-                  acetoneType: '',
-                  acetoneName: ''
-                },
+                glucose: '',
+                acetone: '',
                 bile: false
               },
               urineElements: {
@@ -1761,10 +1618,7 @@
                   waxy: '',
                   epithelial: ''
                 },
-                salts: {
-                  saltsId: '',
-                  saltsName: ''
-                },
+                salts: '',
                 slime: false
               }
             }
@@ -1824,15 +1678,11 @@
               analyzeResult: tmpAnalyzeResult
             }, {
               headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-            }).then(res => {
-              if (res.data.success) {
-                let tmpResultAnalyze = {}
+            }).then(({data}) => {
+              if (data.success) {
                 switch (tmpAnalyzeType) {
                   case 'blood':
-                    tmpResultAnalyze = res.data.patient.bloodResults.find((item) => {
-                      return this.dateFromIso(item.bloodDate) === this.currentBloodResult.bloodDate
-                    })
-                    this.currentEditPatient.bloodResults.push(tmpResultAnalyze)
+                    this.currentEditPatient = data.patient
                     this.currentBloodResult = {
                       bloodDate: '',
                       bloodNumber: '',
@@ -1855,33 +1705,18 @@
                     }
                     break
                   case 'urineClinical':
-                    tmpResultAnalyze = res.data.patient.urineClinicalResults.find((item) => {
-                      return this.dateFromIso(item.urineDate) === this.currentUrineClinicalResult.urineDate
-                    })
-                    this.currentEditPatient.urineClinicalResults.push(tmpResultAnalyze)
+                    this.currentEditPatient = data.patient
                     this.currentUrineClinicalResult = {
                       urineDate: '',
                       urineNumber: '',
                       urineGeneral: {
-                        color: {
-                          colorType: '',
-                          colorName: ''
-                        },
-                        reaction: {
-                          reactionType: '',
-                          reactionName: ''
-                        },
+                        color: '',
+                        reaction: '',
                         density: '',
                         transparency: '',
                         protein: '',
-                        glucose: {
-                          glucoseType: '',
-                          glucoseName: ''
-                        },
-                        acetone: {
-                          acetoneType: '',
-                          acetoneName: ''
-                        },
+                        glucose: '',
+                        acetone: '',
                         bile: false
                       },
                       urineElements: {
@@ -1896,19 +1731,13 @@
                           waxy: '',
                           epithelial: ''
                         },
-                        salts: {
-                          saltsId: '',
-                          saltsName: ''
-                        },
+                        salts: '',
                         slime: false
                       }
                     }
                     break
                   case 'smear':
-                    tmpResultAnalyze = res.data.patient.smearResults.find((item) => {
-                      return this.dateFromIso(item.smearDate) === this.currentSmearResult.smearDate
-                    })
-                    this.currentEditPatient.smearResults.push(tmpResultAnalyze)
+                    this.currentEditPatient = data.patient
                     this.currentSmearResult = {
                       smearDate: '',
                       smearNumber: '',
@@ -1926,10 +1755,7 @@
                     }
                     break
                   case 'rw':
-                    tmpResultAnalyze = res.data.patient.rwResults.find((item) => {
-                      return this.dateFromIso(item.rwDate) === this.currentRwResult.rwDate
-                    })
-                    this.currentEditPatient.rwResults.push(tmpResultAnalyze)
+                    this.currentEditPatient = data.patient
                     this.currentRwResult = {
                       rwDate: '',
                       rwNumber: '',
@@ -1941,13 +1767,13 @@
                   show: false,
                   analyzeType: ''
                 }
-                this.snackBar.color = 'green darken-1 white--text'
+                this.snackBar.color = this.subSystem.snackBarGreen
                 this.snackBar.timeout = 2000
               } else {
-                this.snackBar.color = 'red darken-2 white--text'
+                this.snackBar.color = this.subSystem.snackBarRed
                 this.snackBar.timeout = 5000
               }
-              this.snackBar.message = res.data.message
+              this.snackBar.message = data.message
               this.snackBar.show = true
             }).catch(err => {
               this.errorHandler(err)
@@ -1959,12 +1785,12 @@
               analyzeResult: tmpAnalyzeResult
             }, {
               headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-            }).then(res => {
-              if (res.data.success) {
+            }).then(({data}) => {
+              if (data.success) {
                 let tmpResultAnalyze = {}
                 switch (tmpAnalyzeType) {
                   case 'blood':
-                    tmpResultAnalyze = res.data.patient.bloodResults.find((item) => {
+                    tmpResultAnalyze = data.patient.bloodResults.find((item) => {
                       return this.dateFromIso(item.bloodDate) === this.currentBloodResult.bloodDate
                     })
                     this.currentEditPatient.bloodResults.push(tmpResultAnalyze)
@@ -1990,7 +1816,7 @@
                     }
                     break
                   case 'urineClinical':
-                    tmpResultAnalyze = res.data.patient.urineClinicalResults.find((item) => {
+                    tmpResultAnalyze = data.patient.urineClinicalResults.find((item) => {
                       return this.dateFromIso(item.urineDate) === this.currentUrineClinicalResult.urineDate
                     })
                     this.currentEditPatient.urineClinicalResults.push(tmpResultAnalyze)
@@ -1998,25 +1824,13 @@
                       urineDate: '',
                       urineNumber: '',
                       urineGeneral: {
-                        color: {
-                          colorType: '',
-                          colorName: ''
-                        },
-                        reaction: {
-                          reactionType: '',
-                          reactionName: ''
-                        },
+                        color: '',
+                        reaction: '',
                         density: '',
                         transparency: '',
                         protein: '',
-                        glucose: {
-                          glucoseType: '',
-                          glucoseName: ''
-                        },
-                        acetone: {
-                          acetoneType: '',
-                          acetoneName: ''
-                        },
+                        glucose: '',
+                        acetone: '',
                         bile: false
                       },
                       urineElements: {
@@ -2031,16 +1845,13 @@
                           waxy: '',
                           epithelial: ''
                         },
-                        salts: {
-                          saltsId: '',
-                          saltsName: ''
-                        },
+                        salts: '',
                         slime: false
                       }
                     }
                     break
                   case 'smear':
-                    tmpResultAnalyze = res.data.patient.smearResults.find((item) => {
+                    tmpResultAnalyze = data.patient.smearResults.find((item) => {
                       return this.dateFromIso(item.smearDate) === this.currentSmearResult.smearDate
                     })
                     this.currentEditPatient.smearResults.push(tmpResultAnalyze)
@@ -2061,7 +1872,7 @@
                     }
                     break
                   case 'rw':
-                    tmpResultAnalyze = res.data.patient.rwResults.find((item) => {
+                    tmpResultAnalyze = data.patient.rwResults.find((item) => {
                       return this.dateFromIso(item.rwDate) === this.currentRwResult.rwDate
                     })
                     this.currentEditPatient.rwResults.push(tmpResultAnalyze)
@@ -2076,13 +1887,13 @@
                   show: false,
                   analyzeType: ''
                 }
-                this.snackBar.color = 'green darken-1 white--text'
+                this.snackBar.color = this.subSystem.snackBarGreen
                 this.snackBar.timeout = 2000
               } else {
-                this.snackBar.color = 'red darken-2 white--text'
+                this.snackBar.color = this.subSystem.snackBarRed
                 this.snackBar.timeout = 5000
               }
-              this.snackBar.message = res.data.message
+              this.snackBar.message = data.message
               this.snackBar.show = true
             }).catch(err => {
               this.errorHandler(err)
@@ -2110,8 +1921,8 @@
           data: {
             analyzeType: tmpType
           }
-        }).then(res => {
-          if (res.data.success) {
+        }).then(({data}) => {
+          if (data.success) {
             if (tmpType === 'blood') {
               this.currentEditPatient.bloodResults = this.currentEditPatient.bloodResults.filter(
                 result => result._id !== this.currentRemoveItem._id
@@ -2130,13 +1941,13 @@
               )
             }
             this.removeDialog.show = false
-            this.snackBar.color = 'green darken-1 white--text'
+            this.snackBar.color = this.subSystem.snackBarGreen
             this.snackBar.timeout = 2000
           } else {
-            this.snackBar.color = 'red darken-2 white--text'
+            this.snackBar.color = this.subSystem.snackBarRed
             this.snackBar.timeout = 5000
           }
-          this.snackBar.message = res.data.message
+          this.snackBar.message = data.message
           this.snackBar.show = true
         }).catch(err => {
           this.errorHandler(err)
@@ -2144,42 +1955,42 @@
       },
       //* Проверка на необходимость мазка.
       ifPatientNeedsSmear (patient) {
-        if (patient.hasActiveMedos || (patient.smearResults && patient.smearResults.length > 0)) {
+        if (patient.activeMedos && patient.activeMedos.medosExams) {
           let mustExams = patient.activeMedos.medosExams.mustExams
           return mustExams.some(exam => exam.examId === 43)
         } else {
-          return false
+          return !!(patient.smearResults && patient.smearResults.length > 0)
         }
       },
       //* Проверка на необходимость RW.
       ifPatientNeedsRw (patient) {
-        if (patient.hasActiveMedos || (patient.rwResults && patient.rwResults.length > 0)) {
+        if (patient.activeMedos && patient.activeMedos.medosExams) {
           let mustExams = patient.activeMedos.medosExams.mustExams
           return mustExams.some(exam => exam.examId === 42)
         } else {
-          return false
+          return !!(patient.rwResults && patient.rwResults.length > 0)
         }
       },
       //* Запрашиваем список пациентов на медосмотре по введенным ФИО.
-      getPatients () {
+      getMedosPatients () {
         let tempQuery = {}
-        tempQuery.lastName = (this.patientQuery.lastName === undefined) ? ' ' : this.patientQuery.lastName
-        tempQuery.firstName = (this.patientQuery.firstName === undefined) ? ' ' : this.patientQuery.firstName
-        tempQuery.middleName = (this.patientQuery.middleName === undefined) ? ' ' : this.patientQuery.middleName
-        Axios.get(`${GKP7API}/api/v1/patient/${tempQuery.lastName}/${tempQuery.firstName}/${tempQuery.middleName}/`, {
+        tempQuery.lastName = (this.patientQuery.lastName === undefined || this.patientQuery.lastName === '') ? ' ' : this.patientQuery.lastName
+        tempQuery.firstName = (this.patientQuery.firstName === undefined || this.patientQuery.firstName === '') ? ' ' : this.patientQuery.firstName
+        tempQuery.middleName = (this.patientQuery.middleName === undefined || this.patientQuery.middleName === '') ? ' ' : this.patientQuery.middleName
+        Axios.get(`${GKP7API}/api/v1/patient/medos/${tempQuery.lastName}/${tempQuery.firstName}/${tempQuery.middleName}/`, {
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-        }).then(res => {
-          if (res.data.success) {
+        }).then(({data}) => {
+          if (data.success) {
             this.snackBar.show = false
-            this.patients = res.data.patients
-            this.patients.forEach((item) => {
-              item.dateBirth = this.dateFromIso(item.dateBirth)
+            this.patients = data.patients
+            this.patients.forEach((patient) => {
+              patient.dateBirth = this.dateFromIso(patient.dateBirth)
             })
           } else {
             this.patients = []
             this.snackBar.show = true
-            this.snackBar.color = 'yellow accent-3 black--text'
-            this.snackBar.message = res.data.message
+            this.snackBar.color = this.subSystem.snackBarYellow
+            this.snackBar.message = data.message
           }
         }).catch(err => {
           this.errorHandler(err)
