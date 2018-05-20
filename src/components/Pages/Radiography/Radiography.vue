@@ -5,77 +5,73 @@
     <v-content>
       <v-container fluid fill-height>
         <v-layout
-            justify-center
-            align-center
+          justify-center
+          align-center
         >
           <v-flex xs12>
-            <h2 class="text-xs-center">Поиск пациентов</h2>
+            <h2 class="text-xs-center">Поиск пациентов на медосмотре</h2>
             <v-container grid-list-md>
               <v-layout row wrap>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Фамилия"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Фамилия"
                                 v-model="patientQuery.lastName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Имя"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Имя"
                                 v-model="patientQuery.firstName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Отчество"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Отчество"
                                 v-model="patientQuery.middleName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md12>
-                  <v-btn @click.native="getPatients" :color="subSystem.primaryColor" dark large block>Найти</v-btn>
+                  <v-btn @click.native="getMedosPatients" :color="subSystem.primaryColor" dark large block>Найти</v-btn>
                 </v-flex>
               </v-layout>
               <v-data-table
-                  hide-headers
-                  v-if="patients.length > 0"
-                  :items="patients"
-                  hide-actions
-                  class="elevation-10 mt-4"
+                :headers="[
+                  {text:'ФИО', sortable: false},
+                  {text:'Дата рождения', sortable: false},
+                  {text:'Пол', sortable: false},
+                  {text:'Тип осмотра', sortable: false},
+                  {text:'Действия', sortable: false}
+                ]"
+                v-if="patients.length > 0"
+                :items="patients"
+                hide-actions
+                class="elevation-10 mt-4"
               >
                 <template slot="items" slot-scope="props">
                   <tr>
                     <td>{{ props.item.fio }}</td>
                     <td>{{ props.item.dateBirth }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
-                    <td width="211px">
-                      <v-tooltip top :color="subSystem.secondaryColor">
+                    <td>{{ props.item.activeMedos.medosType }}</td>
+                    <td width="156px">
+                      <v-tooltip top :color="subSystem.primaryColor">
                         <v-btn
-                            slot="activator"
-                            @click.native="openAddRgDialog(props.item)"
-                            :color="subSystem.secondaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openEditRgDialog({edit: false, patient: props.item})"
+                          :color="subSystem.primaryColor"
+                          icon
                         >
-                          <v-icon color="white">assignment_late</v-icon>
+                          <v-icon color="white">assignment_turned_in</v-icon>
                         </v-btn>
-                        <span>Зарегистрировать снимок</span>
+                        <span>Добавить описание</span>
                       </v-tooltip>
                       <v-tooltip top :color="subSystem.secondaryColor">
                         <v-btn
-                            slot="activator"
-                            @click.native="openRgListDialog(props.item)"
-                            :color="subSystem.secondaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openRgListDialog(props.item)"
+                          :color="subSystem.secondaryColor"
+                          icon
                         >
                           <v-icon color="white">assignment</v-icon>
                         </v-btn>
                         <span>Посмотреть список снимков</span>
-                      </v-tooltip>
-                      <v-tooltip top :color="subSystem.secondaryColor">
-                        <v-btn
-                            slot="activator"
-                            @click.native="openEditRgDialog(props.item)"
-                            :color="subSystem.secondaryColor"
-                            icon
-                        >
-                          <v-icon color="white">assignment_turned_in</v-icon>
-                        </v-btn>
-                        <span>Ввести описание</span>
                       </v-tooltip>
                     </td>
                   </tr>
@@ -96,60 +92,100 @@
       {{ snackBar.message }}
     </v-snackbar>
 
-    <!-- Диалог регистрации на снимок -->
-    <v-dialog v-model="addRgDialog.show" persistent max-width="800px">
+    <!-- Диалог добавления/редактирования снимка -->
+    <v-dialog v-model="editRgDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title>
-          <v-flex sm12 md7>
-            <span class="headline">
-            Зарегистрировать снимок для<br/><span
-                class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>?
+          <span v-if="editRgDialog.edit" class="headline">
+            Редактирование снимка для<br/><span
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
-          </v-flex>
-          <v-flex sm12 md5>
-            <v-checkbox
-                class="right"
-                label="Снимок из другого ЛПУ"
-                v-model="addRgDialog.anotherLpu"
-            ></v-checkbox>
-          </v-flex>
+          <span v-if="!editRgDialog.edit" class="headline">
+            Добавление снимка для<br/><span
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+          </span>
         </v-card-title>
-        <v-card-text v-if="addRgDialog.anotherLpu">
+        <v-card-text>
           <v-container grid-list-md>
             <v-layout row wrap>
-              <v-flex sm12 md3>
-                <v-text-field
-                    label="Название ЛПУ"
-                    :color="subSystem.primaryColor"
-                    v-model="currentRgResult.rgLocation.rgLocationComment"
-                >
-                </v-text-field>
-              </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Дата снимка"
-                    :color="subSystem.primaryColor"
-                    v-model="currentRgResult.rgDate"
-                    mask="##.##.####"
-                    return-masked-value
+                  mask="##.##.####"
+                  return-masked-value
+                  v-if="!editRgDialog.edit"
+                  label="Дата снимка"
+                  :color="subSystem.primaryColor"
+                  v-model="currentRgResult.rgDate"
+                >
+                </v-text-field>
+                <v-text-field
+                  v-if="editRgDialog.edit"
+                  label="Дата снимка"
+                  :color="subSystem.primaryColor"
+                  :value="dateFromIso(currentRgResult.rgDate)"
+                  readonly
+                  disabled
                 >
                 </v-text-field>
               </v-flex>
-              <v-flex sm12 md3>
+              <v-flex sm12 md4>
                 <v-select
-                    :items="rgResultTypes"
-                    label="Норма"
-                    :color="subSystem.primaryColor"
-                    v-model="currentRgResult.rgResult.rgResultType"
+                  :items="rgTypes"
+                  label="Тип снимка"
+                  :color="subSystem.primaryColor"
+                  v-model="currentRgResult.rgType"
                 >
                 </v-select>
               </v-flex>
-              <v-flex sm12 md4>
+              <v-flex sm12 md6>
+                <v-spacer></v-spacer>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12>
+                <h3>Рентгенографический снимок</h3>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12 md5>
+                <v-select
+                  :items="rgLocations"
+                  v-if="currentRgResult.rgLocation"
+                  label="Тип ЛПУ"
+                  :color="subSystem.primaryColor"
+                  v-model="currentRgResult.rgLocation.rgLocationType"
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12 md7>
                 <v-text-field
-                    :disabled="currentRgResult.rgResult.rgResultType"
-                    label="Заключение"
-                    :color="subSystem.primaryColor"
-                    v-model="currentRgResult.rgResult.rgResultComment"
+                  v-if="currentRgResult.rgLocation"
+                  label="Название др. ЛПУ"
+                  :color="subSystem.primaryColor"
+                  v-model="currentRgResult.rgLocation.rgLocationComment"
+                  :disabled="currentRgResult.rgLocation.rgLocationType"
+                >
+                </v-text-field>
+              </v-flex>
+            </v-layout>
+            <v-layout row wrap>
+              <v-flex sm12 md3>
+                <v-select
+                  v-if="currentRgResult.rgResult"
+                  :items="rgResultTypes"
+                  label="Заключение"
+                  :color="subSystem.primaryColor"
+                  v-model="currentRgResult.rgResult.rgResultType"
+                >
+                </v-select>
+              </v-flex>
+              <v-flex sm12 md9>
+                <v-text-field
+                  v-if="currentRgResult.rgResult"
+                  label="Описание"
+                  :color="subSystem.primaryColor"
+                  v-model="currentRgResult.rgResult.rgResultComment"
+                  :disabled="currentRgResult.rgResult.rgResultType"
                 >
                 </v-text-field>
               </v-flex>
@@ -159,30 +195,34 @@
         <v-card-actions>
           <v-spacer>
           </v-spacer>
-          <v-btn :color="subSystem.primaryColor" flat class="white--text" @click.native="noAddRgDialog">Закрыть</v-btn>
-          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="yesAddRgDialog">
-            Зарегистрировать
+          <v-btn :color="subSystem.primaryColor" flat class="white--text" @click.native="noEditRgDialog">Закрыть</v-btn>
+          <v-btn v-if="editRgDialog.edit" :color="subSystem.primaryColor" class="white--text"
+                 @click.native="yesEditRgDialog">Сохранить
+          </v-btn>
+          <v-btn v-if="!editRgDialog.edit" :color="subSystem.primaryColor" class="white--text"
+                 @click.native="yesEditRgDialog">Добавить
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <!-- / Диалог регистрации на снимок -->
+    <!-- / Диалог добавления/редактирования снимка -->
 
     <!-- Диалог списка снимков -->
-    <v-dialog v-model="listRgDialog.show" persistent max-width="800px">
+    <v-dialog v-model="listRgDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title>
           <span class="headline">Снимки пациента <br/><span
-              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
           <v-spacer>
           </v-spacer>
           <v-layout row wrap>
             <!-- Добавить снимок -->
             <v-flex sm12 md12>
-              <v-btn @click.native="openAddRgDialog(currentEditPatient)" :color="subSystem.secondaryColor" dark large
-                     block>
-                Зарегистрировать снимок
+              <v-btn @click.native="openEditRgDialog({edit: false, patient: currentEditPatient})"
+                     :color="subSystem.secondaryColor" dark large block
+              >
+                Добавить снимок
               </v-btn>
             </v-flex>
             <!-- / Добавить снимок -->
@@ -192,63 +232,42 @@
           <v-container grid-list-md>
             <h2 v-if="currentEditPatient.rgResults.length > 0">Список снимков</h2>
             <v-data-table
-                v-if="currentEditPatient.rgResults.length > 0"
-                hide-headers
-                :items="currentEditPatient.rgResults"
-                hide-actions
-                class="elevation-5 mt-4"
+              v-if="currentEditPatient.rgResults.length > 0"
+              :headers="[
+                {text:'Дата снимка', sortable: false},
+                {text:'Тип снимка', sortable: false},
+                {text:'ЛПУ', sortable: false},
+                {text:'Действия', sortable: false}
+              ]"
+              :items="currentEditPatient.rgResults"
+              hide-actions
+              class="elevation-5 mt-4"
             >
               <template slot="items" slot-scope="props">
                 <tr>
                   <td>{{ props.item.rgDate | formatDate }}</td>
-                  <td>{{ props.item.rgLocation.rgLocationComment }}</td>
+                  <td>{{ rgTypes.find(type => type.value === props.item.rgType).text }}</td>
+                  <td>{{ (!props.item.rgLocation.rgLocationType) ? props.item.rgLocation.rgLocationComment : `МБУЗ ГКБ
+                    №6, Поликлиника №2` }}
+                  </td>
                   <td width="172px">
-                    <v-tooltip top :color="subSystem.secondaryColor">
+                    <v-tooltip top :color="subSystem.primaryColor">
                       <v-btn
-                          slot="activator"
-                          @click.native="openRgViewDialog(props.item)"
-                          :color="subSystem.secondaryColor"
-                          icon
+                        slot="activator"
+                        @click.native="openEditRgDialog({edit: true, patient: currentEditPatient, rg: props.item})"
+                        :color="subSystem.primaryColor"
+                        icon
                       >
                         <v-icon color="white">assignment</v-icon>
                       </v-btn>
-                      <span>Информация о снимке</span>
+                      <span>Редактировать снимок</span>
                     </v-tooltip>
-                    <v-tooltip top color="red darken-2">
+                    <v-tooltip top :color="subSystem.deleteColor">
                       <v-btn
-                          slot="activator"
-                          @click.native="openRemoveDialog(props.item)"
-                          color="red darken-2"
-                          icon
-                      >
-                        <v-icon color="white">delete</v-icon>
-                      </v-btn>
-                      <span>Удалить снимок</span>
-                    </v-tooltip>
-                  </td>
-                </tr>
-              </template>
-            </v-data-table>
-            <br>
-            <h2 v-if="currentEditPatient.hasActiveRgResult">Зарегистрированный снимок</h2>
-            <v-data-table
-                v-if="currentEditPatient.hasActiveRgResult"
-                hide-headers
-                :items="[currentEditPatient.activeRgResult]"
-                hide-actions
-                class="elevation-5 mt-4"
-            >
-              <template slot="items" slot-scope="props">
-                <tr>
-                  <td>{{ props.item.rgDate | formatDate }}</td>
-                  <td>{{ props.item.rgLocation.rgLocationComment }}</td>
-                  <td width="50px">
-                    <v-tooltip top color="red darken-2">
-                      <v-btn
-                          slot="activator"
-                          @click.native="openRemoveDialog('active')"
-                          color="red darken-2"
-                          icon
+                        slot="activator"
+                        @click.native="openRemoveDialog(props.item)"
+                        :color="subSystem.deleteColor"
+                        icon
                       >
                         <v-icon color="white">delete</v-icon>
                       </v-btn>
@@ -269,85 +288,25 @@
     </v-dialog>
     <!-- / Диалог списка снимков -->
 
-    <!-- Диалог удаления вредности -->
-    <v-dialog v-model="removeDialog.show" persistent max-width="800px">
+    <!-- Диалог удаления снимка -->
+    <v-dialog v-model="removeDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title>
           <span class="headline">
-            Удалить <span v-if="removeDialog.activeRg">активный</span> снимок от {{ currentRemoveItem.rgDate | formatDate }} для<br/>
-            <span class="red--text text--darken-2">«{{ currentEditPatient.fio }}»</span>?
+            Удалить снимок от {{ currentRemoveItem.rgDate | formatDate }} для<br/>
+            <span :class="subSystem.deleteText">«{{ currentEditPatient.fio }}»</span>?
           </span>
         </v-card-title>
         <v-card-actions>
           <v-spacer>
           </v-spacer>
-          <v-btn color="red darken-2" flat @click.native="noRemoveDialog">Нет</v-btn>
-          <v-btn color="red darken-2" class="white--text" @click.native="yesRemoveDialog">Да</v-btn>
+          <v-btn :color="subSystem.deleteColor" flat @click.native="noRemoveDialog">Нет</v-btn>
+          <v-btn :color="subSystem.deleteColor" class="white--text" @click.native="yesRemoveDialog">Да</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <!-- / Диалог удаления вредности -->
+    <!-- / Диалог удаления снимка -->
 
-    <!-- Диалог внесения заключения на снимок -->
-    <v-dialog v-model="viewRgDialog.show" persistent lazy max-width="800px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">
-            Описание снимка от {{ currentRgResult.rgDate | formatDate }} для<br/><span
-              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
-          </span>
-        </v-card-title>
-        <v-card-text>
-          <v-container grid-list-md>
-            <v-layout row wrap>
-              <v-flex sm12 md4>
-                <v-text-field
-                    readonly
-                    label="Дата снимка"
-                    :color="subSystem.primaryColor"
-                    :value="dateFromIso(currentRgResult.rgDate)"
-                >
-                </v-text-field>
-              </v-flex>
-              <v-flex sm12 md8>
-                <v-text-field
-                    readonly
-                    label="Название ЛПУ"
-                    :color="subSystem.primaryColor"
-                    v-model="currentRgResult.rgLocation.rgLocationComment"
-                >
-                </v-text-field>
-              </v-flex>
-              <v-flex sm12 md4>
-                <v-select
-                    readonly
-                    :items="rgResultTypes"
-                    label="Норма"
-                    :color="subSystem.primaryColor"
-                    v-model="currentRgResult.rgResult.rgResultType"
-                >
-                </v-select>
-              </v-flex>
-              <v-flex sm12 md8>
-                <v-text-field
-                    readonly
-                    label="Заключение"
-                    :color="subSystem.primaryColor"
-                    v-model="currentRgResult.rgResult.rgResultComment"
-                >
-                </v-text-field>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer>
-          </v-spacer>
-          <v-btn :color="subSystem.primaryColor" class="white--text" @click.native="noRgViewDialog">Закрыть</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <!-- Диалог внесения заключения на снимок -->
   </div>
 </template>
 
@@ -361,36 +320,47 @@
     data () {
       return {
         //* Пользователь, который осуществил вход в систему, подгружается в mounted.
-        currentUser: {},
+        currentUser: {
+          username: '',
+          password: '',
+          fio: '',
+          roles: {
+            superuser: false,
+            medos: {
+              receptionist: false,
+              premedical: false,
+              functionalDiagnostics: false,
+              doctor: false,
+              admin: false
+            },
+            radiography: {
+              assistant: false,
+              admin: false
+            },
+            laboratory: {
+              assistant: false,
+              admin: false
+            },
+            vaccination: {
+              assistant: false,
+              admin: false
+            }
+          }
+        },
         //* Запрос на пациентам по ФИО, подгружается в начальном окне.
         patientQuery: {},
         //* Подгруженные пациенты после запроса по ФИО.
         patients: [],
         //* Пациент, с которым проводим манипуляции.
         currentEditPatient: {
-          rgResults: [],
-          activeRgResult: {
-            rgDate: '',
-            rgType: {
-              rgTypeId: '',
-              rgTypeName: ''
-            },
-            rgLocation: {
-              rgLocationType: '',
-              rgLocationComment: ''
-            }
-          },
-          hasActiveRgResult: false
+          rgResults: []
         },
-        //* Флюорография, с которой мы работаем.
+        //* Снимок, с которым мы работаем.
         currentRgResult: {
           rgDate: '',
-          rgType: {
-            rgTypeId: '',
-            rgTypeName: ''
-          },
+          rgType: '',
           rgLocation: {
-            rgLocationType: '',
+            rgLocationType: true,
             rgLocationComment: ''
           },
           rgResult: {
@@ -400,25 +370,38 @@
         },
         //* Удаляемый снимок.
         currentRemoveItem: {},
-        //* Все, что связано с диалогов регистрации на снимок.
-        addRgDialog: {
-          show: false,
-          anotherLpu: false
-        },
+        //* Методы для диалогового окна добавления/редактирования снимка.
         editRgDialog: {
-          show: false
+          show: false,
+          edit: false
         },
         listRgDialog: {
           show: false
         },
         removeDialog: {
-          show: false,
-          activeRg: false
-        },
-        viewRgDialog: {
           show: false
         },
         //* Справочники.
+        rgTypes: [
+          {
+            value: 1,
+            text: '1 — Флюорография'
+          },
+          {
+            value: 2,
+            text: '2 — Маммография'
+          }
+        ],
+        rgLocations: [
+          {
+            value: true,
+            text: 'МБУЗ ГКБ №6, Поликлиника №2'
+          },
+          {
+            value: false,
+            text: 'др. ЛПУ'
+          }
+        ],
         rgResultTypes: [
           {
             value: true,
@@ -439,7 +422,12 @@
         //* Цвета для данной подсистемы.
         subSystem: {
           primaryColor: 'blue-grey darken-4',
-          secondaryColor: 'grey darken-1'
+          secondaryColor: 'grey darken-1',
+          deleteColor: 'red',
+          deleteText: 'red--text',
+          snackBarRed: 'red darken-2 white--text',
+          snackBarYellow: 'yellow accent-3 black--text',
+          snackBarGreen: 'green darken-1 white--text'
         }
       }
     },
@@ -449,165 +437,25 @@
       this.getCurrentUser()
     },
     methods: {
-      //* Диалог регистрации на снимок.
-      openAddRgDialog (item) {
-        if (this.currentEditPatient.hasActiveRgResult) {
-          this.snackBar.color = 'yellow accent-3 black--text'
-          this.snackBar.timeout = 5000
-          this.snackBar.message = 'У этого пациента уже зарегистрирован неописанный снимок'
-          this.snackBar.show = true
-        } else {
-          this.currentEditPatient = item
-          this.addRgDialog.show = true
-        }
-      },
-      noAddRgDialog () {
-        this.addRgDialog.show = false
-      },
-      yesAddRgDialog () {
-        let tmpRgResult = {}
-        if (this.addRgDialog.anotherLpu) {
-          tmpRgResult = {
-            rgDate: this.currentRgResult.rgDate,
-            rgType: {
-              rgTypeId: 1,
-              rgTypeName: 'флюорография'
-            },
-            rgLocation: {
-              rgLocationType: 2,
-              rgLocationComment: this.currentRgResult.rgLocation.rgLocationComment
-            },
-            rgResult: {
-              rgResultType: this.currentRgResult.rgResult.rgResultType,
-              rgResultComment: this.currentRgResult.rgResult.rgResultComment
-            }
-          }
-          //* Добавляем снимок из другого ЛПУ в базу данных.
-          Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rgFull/`, {
-            rgResult: tmpRgResult
-          }, {
-            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-          }).then(res => {
-            if (res.data.success) {
-              this.currentEditPatient.rgResults.push(tmpRgResult)
-              this.currentRgResult = {
-                rgDate: '',
-                rgType: {
-                  rgTypeId: '',
-                  rgTypeName: ''
-                },
-                rgLocation: {
-                  rgLocationType: '',
-                  rgLocationComment: ''
-                },
-                rgResult: {
-                  rgResultType: true,
-                  rgResultComment: ''
-                }
-              }
-              this.addRgDialog.show = false
-              this.snackBar.color = 'green darken-1 white--text'
-              this.snackBar.timeout = 2000
-            } else {
-              this.snackBar.color = 'red darken-2 white--text'
-              this.snackBar.timeout = 5000
-            }
-            this.snackBar.message = res.data.message
-            this.snackBar.show = true
-          }).catch(err => {
-            this.errorHandler(err)
-          })
-        } else {
-          tmpRgResult = {
-            rgDate: this.dateFromIso(Date.now()),
-            rgType: {
-              rgTypeId: 1,
-              rgTypeName: 'флюорография'
-            },
-            rgLocation: {
-              rgLocationType: 1,
-              rgLocationComment: 'МБУЗ ГКБ №6, Поликлиника * 2'
-            },
-            rgResult: {
-              rgResultType: true,
-              rgResultComment: ''
-            }
-          }
-          //* Добавляем регистрацию снимка.
-          Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/`, {
-            activeRgResult: tmpRgResult
-          }, {
-            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-          }).then(res => {
-            if (res.data.success) {
-              this.currentEditPatient.activeRgResult = res.data.patient.activeRgResult
-              this.currentEditPatient.hasActiveRgResult = true
-              this.currentRgResult = {
-                rgDate: '',
-                rgType: {
-                  rgTypeId: '',
-                  rgTypeName: ''
-                },
-                rgLocation: {
-                  rgLocationType: '',
-                  rgLocationComment: ''
-                },
-                rgResult: {
-                  rgResultType: true,
-                  rgResultComment: ''
-                }
-              }
-              this.addRgDialog.show = false
-              this.snackBar.color = 'green darken-1 white--text'
-              this.snackBar.timeout = 2000
-            } else {
-              this.snackBar.color = 'red darken-2 white--text'
-              this.snackBar.timeout = 5000
-            }
-            this.snackBar.message = res.data.message
-            this.snackBar.show = true
-          }).catch(err => {
-            this.errorHandler(err)
-          })
-        }
-      },
       //* Диалог редактирования описания снимка.
-      openEditRgDialog (item) {
-        this.currentEditPatient = item
-        if (item.hasActiveRgResult) {
-          this.currentRgResult = item.activeRgResult
-          this.editRgDialog.show = true
+      openEditRgDialog (obj) {
+        if (obj.edit) {
+          this.currentRgResult = obj.rg
         } else {
-          this.snackBar.color = 'yellow accent-3 black--text'
-          this.snackBar.timeout = 5000
-          this.snackBar.message = 'У этого пациента нет зарегистрированных снимков'
-          this.snackBar.show = true
+          this.currentEditPatient = obj.patient
+          this.currentRgResult.rgDate = this.dateFromIso(Date.now())
+        }
+        this.editRgDialog = {
+          edit: obj.edit,
+          show: true
         }
       },
       noEditRgDialog () {
-        this.currentEditPatient = {
-          rgResults: [],
-          activeRgResult: {
-            rgDate: '',
-            rgType: {
-              rgTypeId: '',
-              rgTypeName: ''
-            },
-            rgLocation: {
-              rgLocationType: '',
-              rgLocationComment: ''
-            }
-          },
-          hasActiveRgResult: false
-        }
         this.currentRgResult = {
           rgDate: '',
-          rgType: {
-            rgTypeId: '',
-            rgTypeName: ''
-          },
+          rgType: '',
           rgLocation: {
-            rgLocationType: '',
+            rgLocationType: true,
             rgLocationComment: ''
           },
           rgResult: {
@@ -615,34 +463,25 @@
             rgResultComment: ''
           }
         }
-        this.editRgDialog.show = false
+        this.editRgDialog = {
+          show: false
+        }
       },
       yesEditRgDialog () {
         let tmpRgResult = this.currentRgResult
-        if (this.currentRgResult.rgResultType === false && this.currentRgResult.rgResultComment === '') {
-          this.snackBar.color = 'yellow accent-3 black--text'
-          this.snackBar.timeout = 5000
-          this.snackBar.message = 'Не указана паталогия'
-          this.snackBar.show = true
-        } else {
-          //* Добавляем регистрацию снимка.
-          Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/`, {
+        if (this.editRgDialog.edit) {
+          //* Редактируем снимок пациента.
+          Axios.put(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/${tmpRgResult._id}`, {
             rgResult: tmpRgResult
           }, {
             headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-          }).then(res => {
-            if (res.data.success) {
-              this.currentEditPatient.activeRgResult = {}
-              this.currentEditPatient.hasActiveRgResult = false
-              this.currentEditPatient.rgResults.push(tmpRgResult)
+          }).then(({data}) => {
+            if (data.success) {
               this.currentRgResult = {
                 rgDate: '',
-                rgType: {
-                  rgTypeId: '',
-                  rgTypeName: ''
-                },
+                rgType: '',
                 rgLocation: {
-                  rgLocationType: '',
+                  rgLocationType: true,
                   rgLocationComment: ''
                 },
                 rgResult: {
@@ -650,14 +489,56 @@
                   rgResultComment: ''
                 }
               }
-              this.editRgDialog.show = false
-              this.snackBar.color = 'green darken-1 white--text'
+              this.editRgDialog = {
+                edit: false,
+                show: false
+              }
+              this.snackBar.color = this.subSystem.snackBarGreen
               this.snackBar.timeout = 2000
             } else {
-              this.snackBar.color = 'red darken-2 white--text'
+              this.snackBar.color = this.subSystem.snackBarRed
               this.snackBar.timeout = 5000
             }
-            this.snackBar.message = res.data.message
+            this.snackBar.message = data.message
+            this.snackBar.show = true
+          }).catch(err => {
+            this.errorHandler(err)
+          })
+        } else {
+          //* Добавляем снимок пациенту.
+          Axios.post(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/`, {
+            rgResult: tmpRgResult
+          }, {
+            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+          }).then(({data}) => {
+            if (data.success) {
+              let tmpRgResult = data.patient.rgResults.find((item) => {
+                return this.dateFromIso(item.rgDate) === this.currentRgResult.rgDate
+              })
+              this.currentEditPatient.rgResults.push(tmpRgResult)
+              this.currentRgResult = {
+                rgDate: '',
+                rgType: '',
+                rgLocation: {
+                  rgLocationType: true,
+                  rgLocationComment: ''
+                },
+                rgResult: {
+                  rgResultType: true,
+                  rgResultComment: ''
+                }
+              }
+              this.editRgDialog = {
+                edit: false,
+                show: false
+              }
+              this.snackBar.color = this.subSystem.snackBarGreen
+              this.snackBar.timeout = 2000
+            } else {
+              this.snackBar.color = this.subSystem.snackBarRed
+              this.snackBar.timeout = 5000
+            }
+            this.snackBar.message = data.message
             this.snackBar.show = true
           }).catch(err => {
             this.errorHandler(err)
@@ -671,134 +552,58 @@
       },
       noRgListDialog () {
         this.currentEditPatient = {
-          rgResults: [],
-          activeRgResult: {
-            rgDate: '',
-            rgType: {
-              rgTypeId: '',
-              rgTypeName: ''
-            },
-            rgLocation: {
-              rgLocationType: '',
-              rgLocationComment: ''
-            }
-          }
+          rgResults: []
         }
         this.listRgDialog.show = false
       },
       //* Диалог удаления снимка.
       openRemoveDialog (item) {
-        if (item === 'active') {
-          this.removeDialog.activeRg = true
-          this.currentRemoveItem = this.currentEditPatient.activeRgResult
-        } else {
-          this.currentRemoveItem = item
-        }
+        this.currentRemoveItem = item
         this.removeDialog.show = true
       },
       noRemoveDialog () {
         this.currentRemoveItem = {}
         this.removeDialog.show = false
-        this.removeDialog.activeRg = false
       },
       yesRemoveDialog () {
-        if (this.removeDialog.activeRg) {
-          Axios.delete(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/active/`, {
-            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-          }).then(res => {
-            if (res.data.success) {
-              this.currentEditPatient.activeRgResult = {
-                rgDate: '',
-                rgType: {
-                  rgTypeId: '',
-                  rgTypeName: ''
-                },
-                rgLocation: {
-                  rgLocationType: '',
-                  rgLocationComment: ''
-                },
-                rgResult: {
-                  rgResultType: true,
-                  rgResultComment: ''
-                }
-              }
-              this.currentEditPatient.hasActiveRgResult = false
-              this.currentRemoveItem = {}
-              this.removeDialog.show = false
-              this.snackBar.color = 'green darken-1 white--text'
-              this.snackBar.timeout = 2000
-            } else {
-              this.snackBar.color = 'red darken-2 white--text'
-              this.snackBar.timeout = 5000
-            }
-            this.snackBar.message = res.data.message
-            this.snackBar.show = true
-          }).catch(err => {
-            this.errorHandler(err)
-          })
-        } else {
-          Axios.delete(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/${this.currentRemoveItem._id}`, {
-            headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-          }).then(res => {
-            if (res.data.success) {
-              this.currentEditPatient.rgResults = this.currentEditPatient.rgResults.filter(result => result._id !== this.currentRemoveItem._id)
-              this.removeDialog.show = false
-              this.snackBar.color = 'green darken-1 white--text'
-              this.snackBar.timeout = 2000
-            } else {
-              this.snackBar.color = 'red darken-2 white--text'
-              this.snackBar.timeout = 5000
-            }
-            this.snackBar.message = res.data.message
-            this.snackBar.show = true
-          }).catch(err => {
-            this.errorHandler(err)
-          })
-        }
-      },
-      //* Диалог просмотра снимка.
-      openRgViewDialog (item) {
-        this.currentRgResult = item
-        this.viewRgDialog.show = true
-      },
-      noRgViewDialog () {
-        this.viewRgDialog.show = false
-        this.currentRgResult = {
-          rgDate: '',
-          rgType: {
-            rgTypeId: '',
-            rgTypeName: ''
-          },
-          rgLocation: {
-            rgLocationType: '',
-            rgLocationComment: ''
-          },
-          rgResult: {
-            rgResultType: true,
-            rgResultComment: ''
-          }
-        }
-      },
-      //* Запрашиваем список пациентов по введенным ФИО.
-      getPatients () {
-        let tempQuery = {}
-        tempQuery.lastName = (this.patientQuery.lastName === undefined) ? ' ' : this.patientQuery.lastName
-        tempQuery.firstName = (this.patientQuery.firstName === undefined) ? ' ' : this.patientQuery.firstName
-        tempQuery.middleName = (this.patientQuery.middleName === undefined) ? ' ' : this.patientQuery.middleName
-        Axios.get(`${GKP7API}/api/v1/patient/${tempQuery.lastName}/${tempQuery.firstName}/${tempQuery.middleName}/`, {
+        Axios.delete(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/rg/${this.currentRemoveItem._id}`, {
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-        }).then(res => {
-          if (res.data.success) {
+        }).then(({data}) => {
+          if (data.success) {
+            this.currentEditPatient.rgResults = this.currentEditPatient.rgResults.filter(result => result._id !== this.currentRemoveItem._id)
+            this.removeDialog.show = false
+            this.snackBar.color = this.subSystem.snackBarGreen
+            this.snackBar.timeout = 2000
+          } else {
+            this.snackBar.color = this.subSystem.snackBarRed
+            this.snackBar.timeout = 5000
+          }
+          this.snackBar.message = data.message
+          this.snackBar.show = true
+        }).catch(err => {
+          this.errorHandler(err)
+        })
+      },
+      //* Запрашиваем список пациентов на медосмотре по введенным ФИО.
+      getMedosPatients () {
+        let tempQuery = {}
+        tempQuery.lastName = (this.patientQuery.lastName === undefined || this.patientQuery.lastName === '') ? ' ' : this.patientQuery.lastName
+        tempQuery.firstName = (this.patientQuery.firstName === undefined || this.patientQuery.firstName === '') ? ' ' : this.patientQuery.firstName
+        tempQuery.middleName = (this.patientQuery.middleName === undefined || this.patientQuery.middleName === '') ? ' ' : this.patientQuery.middleName
+        Axios.get(`${GKP7API}/api/v1/patient/medos/${tempQuery.lastName}/${tempQuery.firstName}/${tempQuery.middleName}/`, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+        }).then(({data}) => {
+          if (data.success) {
             this.snackBar.show = false
-            this.patients = res.data.patients
+            this.patients = data.patients
             this.patients.forEach((item) => {
               item.dateBirth = this.dateFromIso(item.dateBirth)
             })
           } else {
             this.patients = []
             this.snackBar.show = true
-            this.snackBar.color = 'yellow accent-3 black--text'
-            this.snackBar.message = res.data.message
+            this.snackBar.color = this.subSystem.snackBarYellow
+            this.snackBar.message = data.message
           }
         }).catch(err => {
           this.errorHandler(err)
@@ -835,7 +640,7 @@
       errorHandler (err) {
         const status = err.response.status
         this.snackBar.show = true
-        this.snackBar.color = 'red lighten-1'
+        this.snackBar.color = this.subSystem.snackBarRed
         if (status === 401) {
           this.snackBar.message = 'Вы не авторизованы.'
         }

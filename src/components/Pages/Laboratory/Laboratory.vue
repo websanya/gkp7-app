@@ -5,8 +5,8 @@
     <v-content>
       <v-container fluid fill-height>
         <v-layout
-            justify-center
-            align-center
+          justify-center
+          align-center
         >
           <v-flex xs12>
             <h2 class="text-xs-center">Поиск пациентов</h2>
@@ -32,11 +32,11 @@
                 </v-flex>
               </v-layout>
               <v-data-table
-                  hide-headers
-                  v-if="patients.length > 0"
-                  :items="patients"
-                  hide-actions
-                  class="elevation-10 mt-4"
+                hide-headers
+                v-if="patients.length > 0"
+                :items="patients"
+                hide-actions
+                class="elevation-10 mt-4"
               >
                 <template slot="items" slot-scope="props">
                   <tr>
@@ -57,10 +57,10 @@
                     <td width="266px">
                       <v-tooltip top :color="subSystem.primaryColor">
                         <v-btn
-                            slot="activator"
-                            @click.native="openBloodResultsListDialog(props.item)"
-                            :color="subSystem.primaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openBloodResultsListDialog(props.item)"
+                          :color="subSystem.primaryColor"
+                          icon
                         >
                           <v-icon color="white">colorize</v-icon>
                         </v-btn>
@@ -68,10 +68,10 @@
                       </v-tooltip>
                       <v-tooltip top :color="subSystem.secondaryColor">
                         <v-btn
-                            slot="activator"
-                            @click.native="openUrineResultsListDialog(props.item)"
-                            :color="subSystem.secondaryColor"
-                            icon
+                          slot="activator"
+                          @click.native="openUrineResultsListDialog(props.item)"
+                          :color="subSystem.secondaryColor"
+                          icon
                         >
                           <v-icon color="white">colorize</v-icon>
                         </v-btn>
@@ -123,7 +123,7 @@
       <v-card v-if="listAnalyzesDialog.analyzeType === 'blood'">
         <v-card-title>
           <span class="headline">Анализы крови пациента <br/><span
-              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
           <v-spacer>
           </v-spacer>
@@ -141,16 +141,16 @@
         <v-card-text>
           <v-container grid-list-md v-if="currentEditPatient.bloodResults.length > 0">
             <v-data-table
-                :headers="[
+              :headers="[
                   { text: 'Дата анализа', value: 'bloodDate' },
                   { text: 'Гемоглобин', value: 'bloodResult.hemoglobin' },
                   { text: 'Лейкоциты', value: 'bloodResult.leucocytes' },
                   { text: 'СОЭ', value: 'bloodResult.esr' },
                   { text: 'Действия', value: '' }
                 ]"
-                :items="currentEditPatient.bloodResults"
-                hide-actions
-                class="elevation-5 mt-4"
+              :items="currentEditPatient.bloodResults"
+              hide-actions
+              class="elevation-5 mt-4"
             >
               <template slot="items" slot-scope="props">
                 <tr>
@@ -161,10 +161,10 @@
                   <td width="172px">
                     <v-tooltip top :color="subSystem.primaryColor">
                       <v-btn
-                          slot="activator"
-                          @click.native="openResultDialog({edit: true, item:props.item})"
-                          :color="subSystem.primaryColor"
-                          icon
+                        slot="activator"
+                        @click.native="openResultDialog({edit: true, item:props.item})"
+                        :color="subSystem.primaryColor"
+                        icon
                       >
                         <v-icon color="white">colorize</v-icon>
                       </v-btn>
@@ -172,10 +172,10 @@
                     </v-tooltip>
                     <v-tooltip top :color="subSystem.deleteColor">
                       <v-btn
-                          slot="activator"
-                          @click.native="openRemoveDialog(props.item)"
-                          :color="subSystem.deleteColor"
-                          icon
+                        slot="activator"
+                        @click.native="openRemoveDialog(props.item)"
+                        :color="subSystem.deleteColor"
+                        icon
                       >
                         <v-icon color="white">delete</v-icon>
                       </v-btn>
@@ -196,7 +196,7 @@
       <v-card v-if="listAnalyzesDialog.analyzeType === 'urineClinical'">
         <v-card-title>
           <span class="headline">Анализы мочи пациента <br/><span
-              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
+            class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>
           </span>
           <v-spacer>
           </v-spacer>
@@ -215,16 +215,16 @@
         <v-card-text>
           <v-container grid-list-md v-if="currentEditPatient.urineClinicalResults.length > 0">
             <v-data-table
-                :headers="[
+              :headers="[
                   { text: 'Дата анализа', value: 'urineDate' },
                   { text: 'Цвет', value: 'urineGeneral.color.colorName' },
                   { text: 'Реакция', value: 'urineGeneral.reaction.reactionName' },
                   { text: 'Плотность', value: 'urineGeneral.density' },
                   { text: 'Действия', value: '' }
                 ]"
-                :items="currentEditPatient.urineClinicalResults"
-                hide-actions
-                class="elevation-5 mt-4"
+              :items="currentEditPatient.urineClinicalResults"
+              hide-actions
+              class="elevation-5 mt-4"
             >
               <template slot="items" slot-scope="props">
                 <tr>
@@ -235,10 +235,10 @@
                   <td width="172px">
                     <v-tooltip top :color="subSystem.secondaryColor">
                       <v-btn
-                          slot="activator"
-                          @click.native="openResultDialog({edit: true, item:props.item})"
-                          :color="subSystem.secondaryColor"
-                          icon
+                        slot="activator"
+                        @click.native="openResultDialog({edit: true, item:props.item})"
+                        :color="subSystem.secondaryColor"
+                        icon
                       >
                         <v-icon color="white">colorize</v-icon>
                       </v-btn>
@@ -246,10 +246,10 @@
                     </v-tooltip>
                     <v-tooltip top :color="subSystem.deleteColor">
                       <v-btn
-                          slot="activator"
-                          @click.native="openRemoveDialog(props.item)"
-                          :color="subSystem.deleteColor"
-                          icon
+                        slot="activator"
+                        @click.native="openRemoveDialog(props.item)"
+                        :color="subSystem.deleteColor"
+                        icon
                       >
                         <v-icon color="white">delete</v-icon>
                       </v-btn>
@@ -302,7 +302,8 @@
                 <tr>
                   <td>{{ props.item.smearDate | formatDate }}</td>
                   <td>{{ (props.item.smearResult.smearGonococcus) ? 'Обнаружены' : 'Не обнаружены' }}</td>
-                  <td>{{ smearLeucocytes.find(item => item.value === props.item.smearResult.smearLeucocytes).text }}</td>
+                  <td>{{ smearLeucocytes.find(item => item.value === props.item.smearResult.smearLeucocytes).text }}
+                  </td>
                   <td width="172px">
                     <v-tooltip top color="purple darken-3">
                       <v-btn
@@ -417,7 +418,7 @@
           <v-flex sm12>
             <span class="headline">
             Добавление анализа крови для<br/><span
-                class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>?
+              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>?
           </span>
           </v-flex>
         </v-card-title>
@@ -426,29 +427,29 @@
             <v-layout row wrap>
               <v-flex sm12 md2>
                 <v-text-field
-                    v-if="!addAnalyzeDialog.edit"
-                    label="Дата анализа"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodDate"
-                    mask="##.##.####"
-                    return-masked-value
+                  mask="##.##.####"
+                  return-masked-value
+                  v-if="!addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodDate"
                 >
                 </v-text-field>
                 <v-text-field
-                    v-if="addAnalyzeDialog.edit"
-                    label="Дата анализа"
-                    :color="subSystem.primaryColor"
-                    :value="dateFromIso(currentBloodResult.bloodDate)"
-                    readonly
-                    disabled
+                  v-if="addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  :color="subSystem.primaryColor"
+                  :value="dateFromIso(currentBloodResult.bloodDate)"
+                  readonly
+                  disabled
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Номер"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodNumber"
+                  label="Номер"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodNumber"
                 >
                 </v-text-field>
               </v-flex>
@@ -464,25 +465,25 @@
             <v-layout row wrap>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="Гемоглобин"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.hemoglobin"
+                  label="Гемоглобин"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.hemoglobin"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="Лейкоциты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.leucocytes"
+                  label="Лейкоциты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.leucocytes"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="СОЭ"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.esr"
+                  label="СОЭ"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.esr"
                 >
                 </v-text-field>
               </v-flex>
@@ -490,49 +491,49 @@
             <v-layout row wrap>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Базофилы"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.basophils"
+                  label="Базофилы"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.basophils"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Эозинофилы"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.eosinophils"
+                  label="Эозинофилы"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.eosinophils"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Бласты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.blasts"
+                  label="Бласты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.blasts"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Миелоциты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.myelocytes"
+                  label="Миелоциты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.myelocytes"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Юные"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.young"
+                  label="Юные"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.young"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Палочки"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.sticks"
+                  label="Палочки"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.sticks"
                 >
                 </v-text-field>
               </v-flex>
@@ -540,41 +541,41 @@
             <v-layout row wrap>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Сегменты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.segments"
+                  label="Сегменты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.segments"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Лимфоциты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.lymphocytes"
+                  label="Лимфоциты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.lymphocytes"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Моноциты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.monocytes"
+                  label="Моноциты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.monocytes"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Нормобласты"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.normoblasts"
+                  label="Нормобласты"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.normoblasts"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md4>
                 <v-text-field
-                    label="Токсич. зерн. нейтроф."
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.tng"
+                  label="Токсич. зерн. нейтроф."
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.tng"
                 >
                 </v-text-field>
               </v-flex>
@@ -587,33 +588,33 @@
             <v-layout row wrap>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Сахар"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.sugar"
+                  label="Сахар"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.sugar"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Холистерин"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.cholesterol"
+                  label="Холистерин"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.cholesterol"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Протромбин"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.prothrombin"
+                  label="Протромбин"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.prothrombin"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="МНО"
-                    :color="subSystem.primaryColor"
-                    v-model="currentBloodResult.bloodResult.inr"
+                  label="МНО"
+                  :color="subSystem.primaryColor"
+                  v-model="currentBloodResult.bloodResult.inr"
                 >
                 </v-text-field>
               </v-flex>
@@ -626,17 +627,17 @@
           <v-btn :color="subSystem.primaryColor" flat class="white--text" @click.native="noResultDialog">Закрыть
           </v-btn>
           <v-btn
-              v-if="!addAnalyzeDialog.edit"
-              :color="subSystem.primaryColor"
-              class="white--text"
-              @click.native="yesResultDialog">
+            v-if="!addAnalyzeDialog.edit"
+            :color="subSystem.primaryColor"
+            class="white--text"
+            @click.native="yesResultDialog">
             Добавить
           </v-btn>
           <v-btn
-              v-if="addAnalyzeDialog.edit"
-              :color="subSystem.primaryColor"
-              class="white--text"
-              @click.native="yesResultDialog">
+            v-if="addAnalyzeDialog.edit"
+            :color="subSystem.primaryColor"
+            class="white--text"
+            @click.native="yesResultDialog">
             Изменить
           </v-btn>
         </v-card-actions>
@@ -646,7 +647,7 @@
           <v-flex sm12>
             <span class="headline">
             Добавление анализа мочи для<br/><span
-                class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>?
+              class="green--text text--darken-2">{{ currentEditPatient.fio }}</span>?
           </span>
           </v-flex>
         </v-card-title>
@@ -655,29 +656,29 @@
             <v-layout row wrap>
               <v-flex sm12 md2>
                 <v-text-field
-                    v-if="!addAnalyzeDialog.edit"
-                    label="Дата анализа"
-                    :color="subSystem.primaryColor"
-                    v-model="currentUrineClinicalResult.urineDate"
-                    mask="##.##.####"
-                    return-masked-value
+                  mask="##.##.####"
+                  return-masked-value
+                  v-if="!addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  :color="subSystem.primaryColor"
+                  v-model="currentUrineClinicalResult.urineDate"
                 >
                 </v-text-field>
                 <v-text-field
-                    v-if="addAnalyzeDialog.edit"
-                    label="Дата анализа"
-                    :color="subSystem.primaryColor"
-                    :value="dateFromIso(currentUrineClinicalResult.urineDate)"
-                    readonly
-                    disabled
+                  v-if="addAnalyzeDialog.edit"
+                  label="Дата анализа"
+                  :color="subSystem.primaryColor"
+                  :value="dateFromIso(currentUrineClinicalResult.urineDate)"
+                  readonly
+                  disabled
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md2>
                 <v-text-field
-                    label="Номер"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineNumber"
+                  label="Номер"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineNumber"
                 >
                 </v-text-field>
               </v-flex>
@@ -693,39 +694,39 @@
             <v-layout row wrap>
               <v-flex sm12 md3>
                 <v-select
-                    :items="urineColors"
-                    label="Цвет"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.color"
-                    autocomplete
+                  :items="urineColors"
+                  label="Цвет"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.color"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
               <v-flex sm12 md3>
                 <v-select
-                    :items="urineReactions"
-                    label="Реакция"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.reaction"
-                    autocomplete
+                  :items="urineReactions"
+                  label="Реакция"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.reaction"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Плотность"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.density"
+                  label="Плотность"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.density"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-select
-                    :items="urineTransparency"
-                    label="Прозрачность"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.transparency"
-                    autocomplete
+                  :items="urineTransparency"
+                  label="Прозрачность"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.transparency"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
@@ -733,39 +734,39 @@
             <v-layout row wrap>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Белок"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.protein"
+                  label="Белок"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.protein"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-select
-                    :items="urineGlucose"
-                    label="Глюкоза"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.glucose"
-                    autocomplete
+                  :items="urineGlucose"
+                  label="Глюкоза"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.glucose"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
               <v-flex sm12 md3>
                 <v-select
-                    :items="urineAcetone"
-                    label="Ацетон"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.acetone"
-                    autocomplete
+                  :items="urineAcetone"
+                  label="Ацетон"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.acetone"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
               <v-flex sm12 md3>
                 <v-select
-                    :items="urineBile"
-                    label="Желч. пигмент"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineGeneral.bile"
-                    autocomplete
+                  :items="urineBile"
+                  label="Желч. пигмент"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineGeneral.bile"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
@@ -778,25 +779,25 @@
             <v-layout row wrap>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Плоский"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.flatEpithelium"
+                  label="Плоский"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.flatEpithelium"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md6>
                 <v-text-field
-                    label="Мочевыводящих путей"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.tractEpithelium"
+                  label="Мочевыводящих путей"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.tractEpithelium"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Почечный"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.renalEpithelium"
+                  label="Почечный"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.renalEpithelium"
                 >
                 </v-text-field>
               </v-flex>
@@ -804,17 +805,17 @@
             <v-layout row wrap>
               <v-flex sm12 md6>
                 <v-text-field
-                    label="Лейкоциты"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.leucocytes"
+                  label="Лейкоциты"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.leucocytes"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md6>
                 <v-text-field
-                    label="Эритроциты"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.erythrocytes"
+                  label="Эритроциты"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.erythrocytes"
                 >
                 </v-text-field>
               </v-flex>
@@ -827,33 +828,33 @@
             <v-layout row wrap>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Гиалиновые"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.cylinders.hyaline"
+                  label="Гиалиновые"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.cylinders.hyaline"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Зернистые"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.cylinders.granular"
+                  label="Зернистые"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.cylinders.granular"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Восковидные"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.cylinders.waxy"
+                  label="Восковидные"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.cylinders.waxy"
                 >
                 </v-text-field>
               </v-flex>
               <v-flex sm12 md3>
                 <v-text-field
-                    label="Эпителиальные"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.cylinders.epithelial"
+                  label="Эпителиальные"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.cylinders.epithelial"
                 >
                 </v-text-field>
               </v-flex>
@@ -861,21 +862,21 @@
             <v-layout row wrap>
               <v-flex sm12 md6>
                 <v-select
-                    :items="urineSalts"
-                    label="Соли"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.salts"
-                    autocomplete
+                  :items="urineSalts"
+                  label="Соли"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.salts"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
               <v-flex sm12 md6>
                 <v-select
-                    :items="urineSlime"
-                    label="Слизь"
-                    :color="subSystem.secondaryColor"
-                    v-model="currentUrineClinicalResult.urineElements.slime"
-                    autocomplete
+                  :items="urineSlime"
+                  label="Слизь"
+                  :color="subSystem.secondaryColor"
+                  v-model="currentUrineClinicalResult.urineElements.slime"
+                  autocomplete
                 >
                 </v-select>
               </v-flex>
@@ -888,17 +889,17 @@
           <v-btn :color="subSystem.secondaryColor" flat class="white--text" @click.native="noResultDialog">Закрыть
           </v-btn>
           <v-btn
-              v-if="!addAnalyzeDialog.edit"
-              :color="subSystem.secondaryColor"
-              class="white--text"
-              @click.native="yesResultDialog">
+            v-if="!addAnalyzeDialog.edit"
+            :color="subSystem.secondaryColor"
+            class="white--text"
+            @click.native="yesResultDialog">
             Добавить
           </v-btn>
           <v-btn
-              v-if="addAnalyzeDialog.edit"
-              :color="subSystem.secondaryColor"
-              class="white--text"
-              @click.native="yesResultDialog">
+            v-if="addAnalyzeDialog.edit"
+            :color="subSystem.secondaryColor"
+            class="white--text"
+            @click.native="yesResultDialog">
             Изменить
           </v-btn>
         </v-card-actions>

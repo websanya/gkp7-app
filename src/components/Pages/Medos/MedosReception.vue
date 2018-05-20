@@ -123,7 +123,7 @@
     </v-snackbar>
 
     <!-- Диалог добавления/редактирования пациента -->
-    <v-dialog v-model="editPatientDialog.show" persistent max-width="800px">
+    <v-dialog v-model="editPatientDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title v-if="!editPatientDialog.edit">
           <span class="headline">
@@ -260,7 +260,7 @@
     <!-- / Диалог добавления/редактирования пациента -->
 
     <!-- Диалог добавления/редактирования работы -->
-    <v-dialog v-model="editJobDialog.show" persistent max-width="700px">
+    <v-dialog v-model="editJobDialog.show" persistent lazy max-width="700px">
       <v-card>
         <v-card-title>
           <span class="headline">
@@ -327,7 +327,7 @@
     <!-- / Диалог редактирования работы -->
 
     <!-- Диалог поставноки на медосмотр -->
-    <v-dialog v-model="editMedosDialog.show" persistent max-width="500px">
+    <v-dialog v-model="editMedosDialog.show" persistent lazy max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">Зарегистрировать <span
@@ -362,7 +362,7 @@
     <!-- / Диалог поставноки на проф. осмотр -->
 
     <!-- Диалог удаления пациента/работы/медосмотра -->
-    <v-dialog v-model="removeDialog.show" persistent max-width="500px">
+    <v-dialog v-model="removeDialog.show" persistent lazy max-width="500px">
       <v-card>
         <v-card-title v-if="removeDialog.remove === 'job'">
           <span class="headline">

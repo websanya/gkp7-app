@@ -104,7 +104,7 @@
     </v-snackbar>
 
     <!-- Диалог редактирования параметров -->
-    <v-dialog v-model="editParametersDialog.show" persistent max-width="700px">
+    <v-dialog v-model="editParametersDialog.show" persistent lazy max-width="700px">
       <v-card>
         <v-card-title>
           <span class="headline">Редактировать параметры для пациента <br/><span
@@ -241,7 +241,7 @@
     <!-- / Диалог редактирования параметров -->
 
     <!-- Диалог редактирования вредностей -->
-    <v-dialog v-model="editHarmsDialog.show" persistent max-width="800px">
+    <v-dialog v-model="editHarmsDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title>
           <span class="headline">Редактировать вредности для пациента <br/><span
@@ -301,7 +301,7 @@
     <!-- / Диалог редактирования вредностей -->
 
     <!-- Диалог добавления конкретной вредности -->
-    <v-dialog v-model="addNewHarmDialog.show" persistent max-width="800px">
+    <v-dialog v-model="addNewHarmDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title v-if="currentEditHarm">
           <span class="headline">Добавить новую вредность</span>
@@ -331,7 +331,7 @@
     <!-- / Диалог добавления конкретной вредности -->
 
     <!-- Диалог удаления вредности -->
-    <v-dialog v-model="removeDialog.show" persistent max-width="800px">
+    <v-dialog v-model="removeDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title v-if="currentRemoveItem.harmName">
           <span class="headline">
@@ -350,7 +350,7 @@
     <!-- / Диалог удаления вредности -->
 
     <!-- Диалог бегунка с назначениями -->
-    <v-dialog v-model="appointmentsDialog.show" persistent max-width="800px">
+    <v-dialog v-model="appointmentsDialog.show" persistent lazy max-width="800px">
       <v-card>
         <v-card-title
           v-if="currentEditPatient.activeMedos && currentEditPatient.activeMedos.medosDoctors && currentEditPatient.activeMedos.medosExams">
@@ -885,8 +885,8 @@
           if (data.success) {
             this.snackBar.show = false
             this.patients = data.patients
-            this.patients.forEach((item) => {
-              item.dateBirth = this.dateFromIso(item.dateBirth)
+            this.patients.forEach((patient) => {
+              patient.dateBirth = this.dateFromIso(patient.dateBirth)
             })
           } else {
             this.patients = []
