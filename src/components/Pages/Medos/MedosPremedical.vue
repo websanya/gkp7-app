@@ -874,12 +874,14 @@
         this.appointmentsDialog.show = false
       },
       printAppointmentsDialog () {
-        let content = this.$refs.print.innerHTML
+        let content1 = this.$refs.print.innerHTML
+        let content2 = '<style>*{margin:0;padding:0;}body{padding: 10%}</style>'
         let myWindow = window.open('', 'Print', 'height=600,width=800')
 
         myWindow.document.write('<html><head><title>Print</title>')
         myWindow.document.write('</head><body >')
-        myWindow.document.write(content)
+        myWindow.document.write(content1)
+        myWindow.document.write(content2)
         myWindow.document.write('</body></html>')
 
         myWindow.document.close()

@@ -9,26 +9,26 @@
             align-center
         >
           <v-flex xs12>
-            <h2 class="text-xs-center">Поиск пациентов</h2>
+            <h2 class="text-xs-center">Поиск пациентов на медосмотре</h2>
             <v-container grid-list-md>
               <v-layout row wrap>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Фамилия"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Фамилия"
                                 v-model="patientQuery.lastName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Имя"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Имя"
                                 v-model="patientQuery.firstName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md4>
-                  <v-text-field @keyup.enter="getPatients" :color="subSystem.secondaryColor" label="Отчество"
+                  <v-text-field @keyup.enter="getMedosPatients" :color="subSystem.secondaryColor" label="Отчество"
                                 v-model="patientQuery.middleName" box>
                   </v-text-field>
                 </v-flex>
                 <v-flex xs12 md12>
-                  <v-btn @click.native="getPatients" :color="subSystem.primaryColor" dark large block>Найти</v-btn>
+                  <v-btn @click.native="getMedosPatients" :color="subSystem.primaryColor" dark large block>Найти</v-btn>
                 </v-flex>
               </v-layout>
               <v-data-table
@@ -43,16 +43,12 @@
                     <td>{{ props.item.fio }}</td>
                     <td>{{ props.item.dateBirth }}</td>
                     <td>{{ (props.item.sex) ? 'Муж' : 'Жен' }}</td>
-                    <td width="211px">
+                    <td width="156px">
                       <v-btn @click.native="addVaccineDialog(props.item)" :color="subSystem.primaryColor" icon>
                         <v-icon color="white">note_add</v-icon>
                       </v-btn>
                       <v-btn @click.native="showVaccinesDialog(props.item)" :color="subSystem.secondaryColor" icon>
                         <v-icon color="white">local_drink</v-icon>
-                      </v-btn>
-                      <v-btn v-if="props.item.hasActiveMedos" @click.native="console.log('medos')"
-                             color="amber darken-4" icon>
-                        <v-icon color="white">account_box</v-icon>
                       </v-btn>
                     </td>
                   </tr>
@@ -76,7 +72,7 @@
     <v-dialog v-model="showAddDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">{{ currentPatient.fio }}</span>
+          <span class="headline">{{ currentEditPatient.fio }}</span>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
@@ -219,35 +215,31 @@
     </v-dialog>
 
     <v-dialog v-model="showListDialog" persistent max-width="800px">
-      <v-btn color="primary" dark slot="activator" class="mb-2">New Item</v-btn>
       <v-card>
         <v-card-title>
-          <span class="headline">{{ currentPatient.fio }}</span>
+          <span class="headline">{{ currentEditPatient.fio }}</span>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
             <v-data-table
                 :headers="[
-                  { text: 'Прививка', value: 'vaccine.vaccineName'},
-                  { text: 'Дата вакцинации', value: 'dateVaccination' },
-                  { text: 'Дата ревакцинации', value: 'dateRevaccination' }
+                  { text: 'Прививка', sortable: false },
+                  { text: 'Дата вакцинации', sortable: false },
+                  { text: 'Дата ревакцинации', sortable: false },
+                  { text: 'Действия', sortable: false }
                 ]"
-                :items="currentPatient.vaccines"
+                :items="currentEditPatient.vaccines"
                 rows-per-page-text="Строк на странице:"
                 class="elevation-10 mt-4"
             >
               <template slot="items" slot-scope="props">
                 <tr>
-                  <!--<td>{{ props.item }}</td>-->
                   <td>{{ props.item.vaccine.vaccineName }}</td>
                   <td>{{ props.item.dateVaccination | formatDate }}</td>
                   <td>{{ props.item.dateRevaccination | formatDate }}</td>
-                  <td width="156px">
-                    <v-btn @click.native="document.console.log('lol')" :color="subSystem.primaryColor" icon>
-                      <v-icon color="white">edit</v-icon>
-                    </v-btn>
-                    <v-btn @click.native="document.console.log('lol')" color="red lighten-1" icon>
-                      <v-icon color="white">clear</v-icon>
+                  <td>
+                    <v-btn @click.native="openRemoveDialog(props.item)" color="red lighten-1" icon>
+                      <v-icon color="white">delete</v-icon>
                     </v-btn>
                   </td>
                 </tr>
@@ -265,6 +257,26 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Диалог удаления прививки -->
+    <v-dialog v-model="removeDialog.show" persistent lazy max-width="800px">
+      <v-card v-if="currentRemoveItem.vaccine">
+        <v-card-title v-if="currentRemoveItem.vaccine.vaccineName">
+          <span class="headline">
+            Вы точно хотите удалить прививку <br/>
+            <span :class="subSystem.deleteText">«{{ currentRemoveItem.vaccine.vaccineName }}»</span>
+            от {{ currentRemoveItem.dateVaccination | formatDate }}?
+          </span>
+        </v-card-title>
+        <v-card-actions>
+          <v-spacer>
+          </v-spacer>
+          <v-btn :color="subSystem.deleteColor" flat @click.native="noRemoveDialog">Нет</v-btn>
+          <v-btn :color="subSystem.deleteColor" class="white--text" @click.native="yesRemoveDialog">Да</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- / Диалог удаления прививки -->
   </div>
 </template>
 
@@ -279,11 +291,15 @@
       return {
         showAddDialog: false,
         showListDialog: false,
+        removeDialog: {
+          show: false
+        },
         patientQuery: {},
         showDateVaccination: false,
         patients: [],
         currentUser: {},
-        currentPatient: {},
+        currentEditPatient: {},
+        currentRemoveItem: {},
         currentVaccine: {
           vaccine: {
             vaccineName: '',
@@ -472,7 +488,7 @@
           '4 - ЧП',
           '5 - Общепит'
         ],
-        //* Все, что связано с snackbar, который всплывает во время ошибок.
+        //* Все, что связано с snackBar, который всплывает во время ошибок.
         snackBar: {
           show: false,
           message: '',
@@ -482,68 +498,51 @@
         //* Цвета для данной подсистемы.
         subSystem: {
           primaryColor: 'green darken-4',
-          secondaryColor: 'brown darken-2'
+          secondaryColor: 'brown darken-2',
+          deleteColor: 'red',
+          deleteText: 'red--text',
+          snackBarRed: 'red darken-2 white--text',
+          snackBarYellow: 'yellow accent-3 black--text',
+          snackBarGreen: 'green darken-1 white--text'
         }
       }
     },
-    //* Подгружаем объект залогиненного пользователя для последующего использования.
     mounted () {
-      Axios.get(`${GKP7API}/api/v1/user`, {
-        headers: {'Authorization': Authentication.getAuthenticationHeader(this)},
-        params: {user_id: this.$cookie.get('user_id')}
-      }).then(({data}) => {
-        this.currentUser = data
-      }).catch(err => {
-        this.errorHandler(err)
-      })
+      //* Подгружаем пользователя, который осуществил вход.
+      this.getCurrentUser()
     },
     methods: {
-      //* Запрашиваем список пациентов по введенным ФИО.
-      getPatients () {
-        let tempQuery = {}
-        tempQuery.lastName = (this.patientQuery.lastName === undefined) ? ' ' : this.patientQuery.lastName
-        tempQuery.firstName = (this.patientQuery.firstName === undefined) ? ' ' : this.patientQuery.firstName
-        tempQuery.middleName = (this.patientQuery.middleName === undefined) ? ' ' : this.patientQuery.middleName
-        Axios.get(`${GKP7API}/api/v1/patient/${tempQuery.lastName}/${tempQuery.firstName}/${tempQuery.middleName}/`, {
-          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
-        }).then(res => {
-          if (res.data.success) {
-            this.snackBar.show = false
-            this.patients = res.data.patients
-            this.patients.forEach((item) => {
-              item.dateBirth = this.dateFromIso(item.dateBirth)
-            })
-          } else {
-            this.patients = []
-            this.snackBar.show = true
-            this.snackBar.color = 'yellow accent-3 black--text'
-            this.snackBar.message = res.data.message
-          }
-        }).catch(err => {
-          this.errorHandler(err)
-        })
-      },
       //* Открыть диалог добавления прививки. Подхватываем пациента и обнуляем объект прививки.
       addVaccineDialog (item) {
-        this.showAddDialog = true
-        this.currentPatient = item
-        this.currentVaccine = {
-          vaccine: {
-            vaccineName: '',
-            drugName: '',
-            drugSeries: ''
-          },
-          vaccineType: '',
-          dateVaccination: '',
-          dateRevaccination: '',
-          invasionMethod: '',
-          dose: '',
-          controlNumber: '',
-          dateExpiration: '',
-          lpuCode: '',
-          riskGroup: '',
-          payment: '',
-          updatedBy: ''
+        this.currentEditPatient = item
+        //* Проверяем открывать ли вообще диалог, вдруг отсутствует посещение доврачебного.
+        if (this.currentEditPatient.activeMedos && !this.currentEditPatient.activeMedos.medosDoctors) {
+          this.snackBar = {
+            color: 'red darken-2 white--text',
+            timeout: 5000,
+            message: 'Пациент не был в доврачебном кабинете.',
+            show: true
+          }
+        } else {
+          this.showAddDialog = true
+          this.currentVaccine = {
+            vaccine: {
+              vaccineName: '',
+              drugName: '',
+              drugSeries: ''
+            },
+            vaccineType: '',
+            dateVaccination: '',
+            dateRevaccination: '',
+            invasionMethod: '',
+            dose: '',
+            controlNumber: '',
+            dateExpiration: '',
+            lpuCode: '',
+            riskGroup: '',
+            payment: '',
+            updatedBy: ''
+          }
         }
       },
       //* При обновлении селектора прививки подставляем значения в селектор препаратов.
@@ -567,7 +566,7 @@
       //* Закрыть диалог добавления прививки. Обнуление пациента и прививки.
       closeAddDialog () {
         this.showAddDialog = false
-        this.currentPatient = {}
+        this.currentEditPatient = {}
         this.currentVaccine = {
           vaccine: {
             vaccineName: '',
@@ -593,13 +592,13 @@
         this.currentVaccine.dateVaccination = this.toDate(this.currentVaccine.dateVaccination)
         this.currentVaccine.dateRevaccination = this.toDate(this.currentVaccine.dateRevaccination)
         this.currentVaccine.dateExpiration = this.toDate(this.currentVaccine.dateExpiration)
-        this.currentPatient.newVaccine = this.currentVaccine
+        this.currentEditPatient.newVaccine = this.currentVaccine
         this.sendNewVaccine()
         this.showAddDialog = false
       },
       //* Отправляем новую прививку в БД.
       sendNewVaccine () {
-        Axios.post(`${GKP7API}/api/v1/vaccine`, this.currentPatient, {
+        Axios.post(`${GKP7API}/api/v1/vaccine`, this.currentEditPatient, {
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
         }).then(res => {
           if (res.data.success) {
@@ -623,9 +622,9 @@
               updatedBy: ''
             }
           } else {
-            this.showSnackbar = true
-            this.snackColor = 'red lighten-1'
-            this.snackMessage = res.data.message
+            this.snackBar.show = true
+            this.snackBar.color = 'red lighten-1'
+            this.snackBar.message = res.data.message
           }
         }).catch(err => {
           this.errorHandler(err)
@@ -633,17 +632,17 @@
       },
       //* Диалог просмотра всех прививок.
       showVaccinesDialog (item) {
-        this.currentPatient = item
+        this.currentEditPatient = item
         Axios.get(`${GKP7API}/api/v1/vaccines/${item._id}`, {
           headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
         }).then(res => {
           if (res.data.success) {
             this.showListDialog = true
-            this.currentPatient.vaccines = res.data.vaccines
+            this.currentEditPatient.vaccines = res.data.vaccines
           } else {
-            this.showSnackbar = true
-            this.snackColor = 'yellow accent-3 black--text'
-            this.snackMessage = res.data.message
+            this.snackBar.show = true
+            this.snackBar.color = 'yellow accent-3 black--text'
+            this.snackBar.message = res.data.message
           }
         }).catch(err => {
           this.errorHandler(err)
@@ -651,6 +650,71 @@
       },
       closeVaccinesDialog () {
         this.showListDialog = false
+      },
+      //* Диалог удаления прививки.
+      openRemoveDialog (item) {
+        this.currentRemoveItem = item
+        this.removeDialog.show = true
+      },
+      noRemoveDialog () {
+        this.currentRemoveItem = {}
+        this.removeDialog.show = false
+      },
+      yesRemoveDialog () {
+        Axios.delete(`${GKP7API}/api/v1/patient/${this.currentEditPatient._id}/vaccine/${this.currentRemoveItem._id}`, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+        }).then(({data}) => {
+          if (data.success) {
+            this.currentEditPatient.vaccines = this.currentEditPatient.vaccines.filter(result => result._id !== this.currentRemoveItem._id)
+            this.removeDialog.show = false
+            this.showListDialog = false
+            this.snackBar.color = this.subSystem.snackBarGreen
+            this.snackBar.timeout = 2000
+          } else {
+            this.snackBar.color = this.subSystem.snackBarRed
+            this.snackBar.timeout = 5000
+          }
+          this.snackBar.message = data.message
+          this.snackBar.show = true
+        }).catch(err => {
+          this.errorHandler(err)
+        })
+      },
+      //* Запрашиваем список пациентов на медосмотре по введенным ФИО.
+      getMedosPatients () {
+        let tempQuery = {}
+        tempQuery.lastName = (this.patientQuery.lastName === undefined || this.patientQuery.lastName === '') ? ' ' : this.patientQuery.lastName
+        tempQuery.firstName = (this.patientQuery.firstName === undefined || this.patientQuery.firstName === '') ? ' ' : this.patientQuery.firstName
+        tempQuery.middleName = (this.patientQuery.middleName === undefined || this.patientQuery.middleName === '') ? ' ' : this.patientQuery.middleName
+        Axios.get(`${GKP7API}/api/v1/patient/medos/${tempQuery.lastName}/${tempQuery.firstName}/${tempQuery.middleName}/`, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)}
+        }).then(({data}) => {
+          if (data.success) {
+            this.snackBar.show = false
+            this.patients = data.patients
+            this.patients.forEach((patient) => {
+              patient.dateBirth = this.dateFromIso(patient.dateBirth)
+            })
+          } else {
+            this.patients = []
+            this.snackBar.show = true
+            this.snackBar.color = this.subSystem.snackBarYellow
+            this.snackBar.message = data.message
+          }
+        }).catch(err => {
+          this.errorHandler(err)
+        })
+      },
+      //* Запрашиваем пользователя, который осуществил вход.
+      getCurrentUser () {
+        Axios.get(`${GKP7API}/api/v1/user`, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)},
+          params: {user_id: this.$cookie.get('user_id')}
+        }).then(({data}) => {
+          this.currentUser = data
+        }).catch(err => {
+          this.errorHandler(err)
+        })
       },
       //* Обработчик ошибок, который добавляет сообщение в snackbar.
       errorHandler (err) {
@@ -697,5 +761,11 @@
   .theme--light .input-group input:disabled,
   .theme--light .input-group textarea:disabled {
     color: rgba(#1b5e20, 0.7) !important;
+  }
+
+  .router-link-exact-active {
+    background-color: #1b5e20;
+    color: white;
+    padding: 0 6px;
   }
 </style>

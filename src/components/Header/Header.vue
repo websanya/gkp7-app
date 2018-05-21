@@ -82,6 +82,17 @@
               </router-link>
             </v-list-tile-content>
           </v-list-tile>
+          <v-list-tile
+              v-if="currentUser.roles.medos.admin || currentUser.roles.superuser">
+            <v-list-tile-action>
+              <v-icon>local_hospital</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <router-link :to="'/medos/reports'">
+                <v-list-tile-title>Отчеты профосмотра</v-list-tile-title>
+              </router-link>
+            </v-list-tile-content>
+          </v-list-tile>
           <v-divider>
           </v-divider>
         </div>
@@ -145,16 +156,16 @@
           <v-subheader inset>Управление</v-subheader>
           <v-divider>
           </v-divider>
-          <v-list-tile v-if="currentUser.roles.superuser">
-            <v-list-tile-action>
-              <v-icon>settings</v-icon>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <router-link :to="'/admin/users'">
-                <v-list-tile-title>Редактор пользователей</v-list-tile-title>
-              </router-link>
-            </v-list-tile-content>
-          </v-list-tile>
+          <!--<v-list-tile v-if="currentUser.roles.superuser">-->
+            <!--<v-list-tile-action>-->
+              <!--<v-icon>settings</v-icon>-->
+            <!--</v-list-tile-action>-->
+            <!--<v-list-tile-content>-->
+              <!--<router-link :to="'/admin/users'">-->
+                <!--<v-list-tile-title>Редактор пользователей</v-list-tile-title>-->
+              <!--</router-link>-->
+            <!--</v-list-tile-content>-->
+          <!--</v-list-tile>-->
           <v-list-tile v-if="currentUser.roles.medos.admin || currentUser.roles.superuser">
             <v-list-tile-action>
               <v-icon>settings</v-icon>

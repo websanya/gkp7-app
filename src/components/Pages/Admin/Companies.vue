@@ -1,7 +1,7 @@
 <template>
   <div class=uwd-container>
     <!-- Верхняя рамка приложения + боковое меню -->
-    <app-header :subsystem="subSystem.primaryColor" subtitle="Редактор предприятий">
+    <app-header :subsystem="subSystem.primaryColor" subtitle="Редактор предприятий" :currentUser="currentUser">
     </app-header>
     <!-- / Верхняя рамка приложения + боковое меню -->
     <!-- Контент (заголовок + таблица) -->
@@ -98,7 +98,7 @@
     <!-- / Контент (заголовок + таблица) -->
 
     <!-- Нижняя рамка приложения -->
-    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser.fio">
+    <app-footer :subsystem="subSystem.primaryColor" :currentUser="currentUser">
     </app-footer>
     <!-- / Нижняя рамка приложения -->
 
@@ -636,15 +636,8 @@
     },
     //* Подгружаем всякое перед инициализацией компонента.
     mounted () {
-      //* Подгружаем объект залогиненного пользователя для последующего использования.
-      Axios.get(`${GKP7API}/api/v1/user`, {
-        headers: {'Authorization': Authentication.getAuthenticationHeader(this)},
-        params: {user_id: this.$cookie.get('user_id')}
-      }).then(({data}) => {
-        this.currentUser = data
-      }).catch(err => {
-        this.errorHandler(err)
-      })
+      //* Подгружаем пользователя, который осуществил вход.
+      this.getCurrentUser()
       //* Подгружаем все предприятия из базы данных.
       this.getAllCompanies()
     },
@@ -990,6 +983,17 @@
             this.snackBar.message = 'Компаний не найдено'
             this.snackBar.timeout = 5000
           }
+        }).catch(err => {
+          this.errorHandler(err)
+        })
+      },
+      //* Запрашиваем пользователя, который осуществил вход.
+      getCurrentUser () {
+        Axios.get(`${GKP7API}/api/v1/user`, {
+          headers: {'Authorization': Authentication.getAuthenticationHeader(this)},
+          params: {user_id: this.$cookie.get('user_id')}
+        }).then(({data}) => {
+          this.currentUser = data
         }).catch(err => {
           this.errorHandler(err)
         })

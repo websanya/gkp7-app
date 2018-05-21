@@ -1103,12 +1103,6 @@
         }).then(({data}) => {
           if (data.success === true) {
             this.mkbs = data.mkbs
-            this.mkbsForSelect = this.mkbs.map(
-              mkb => ({
-                value: mkb.mkbCode,
-                text: `${mkb.mkbCode} - ${mkb.mkbName}`
-              })
-            )
           }
         }).catch(err => {
           this.errorHandler(err)

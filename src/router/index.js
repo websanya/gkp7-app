@@ -8,6 +8,7 @@ import MedosPremedical from '@/components/pages/Medos/MedosPremedical'
 import MedosDoctor from '@/components/pages/Medos/MedosDoctor'
 import MedosExam from '@/components/pages/Medos/MedosExam'
 import MedosArchive from '@/components/pages/Medos/MedosArchive'
+import MedosReports from '@/components/pages/Medos/MedosReports'
 import Radiography from '@/components/pages/Radiography/Radiography'
 import Laboratory from '@/components/pages/Laboratory/Laboratory'
 import Vaccination from '@/components/pages/Vaccination/Vaccination'
@@ -56,6 +57,11 @@ const router = new Router({
       component: MedosArchive
     },
     {
+      path: '/medos/reports',
+      name: 'MedosReports',
+      component: MedosReports
+    },
+    {
       path: '/radiography',
       name: 'Radiography',
       component: Radiography
@@ -91,7 +97,7 @@ router.beforeEach((to, from, next) => {
       if (to.path === '/' && from.path === '/login') {
         console.log('redirect logged users to corresponding page')
         if (roles.superuser) {
-          router.push('/admin/users')
+          router.push('/medos/reception')
         } else if (roles.medos && (roles.medos.doctor !== 0 || roles.medos.admin)) {
           router.push('/medos/doctor')
         } else if (roles.medos && roles.medos.exam !== 0) {
